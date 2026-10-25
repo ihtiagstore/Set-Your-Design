@@ -211,9 +211,11 @@ a.btn{text-decoration:none}
   var SCENES=[
     {id:"sofa",name:"Above the sofa",top:150,fw:200,label:"sofa"},
     {id:"tv",name:"Above the TV",top:131,fw:150,label:"TV unit"},
-    {id:"bed",name:"Above the bed",top:125,fw:180,label:"bed"}
+    {id:"bed",name:"Above the bed",top:125,fw:180,label:"bed"},
+    {id:"desk",name:"Above the computer",top:112,fw:140,label:"desk"},
+    {id:"wall",name:"Empty wall",center:90,availH:200,fw:280,label:"wall"}
   ];
-  var WALLS=[{n:"Plaster",c:"#E4DED2"},{n:"Sage",c:"#B7C1AE"},{n:"Clay",c:"#D1B8A4"},{n:"Ink",c:"#3B404C"}];
+  var WALLS=[{n:"Plaster",c:"#E4DED2"},{n:"Sage",c:"#B7C1AE"},{n:"Clay",c:"#D1B8A4"},{n:"Ink",c:"#3B404C"},{n:"White",c:"#F6F4EF"},{n:"Beige",c:"#D8C7A8"},{n:"Black",c:"#151515"}];
   var LAYOUTS=[{id:"row",n:"Row"},{id:"centered",n:"Centred"},{id:"grid",n:"Grid"},{id:"column",n:"Column"}];
   var PRESETS=[
     {n:"Classic trio",sizes:[1,1,1],layout:"row"},
@@ -404,6 +406,24 @@ a.btn{text-decoration:none}
         '<path d="M107.5 133.5 L150 133.5 L118 188.5 L107.5 188.5 Z" fill="rgba(255,255,255,.07)"/>'+
         '<rect x="224" y="178" width="9" height="17" rx="3" fill="#cdb9a0"/>'+
         '<path d="M228 178 q-6 -14 -2 -22 M228 178 q2 -12 9 -18" stroke="#6f8b5a" stroke-width="1.6" fill="none"/>';
+    }else if(id==="desk"){
+      m='<ellipse cx="160" cy="236.5" rx="86" ry="3.8" fill="rgba(0,0,0,.28)"/>'+
+        '<rect x="96" y="164" width="5" height="71" fill="#6f5238"/><rect x="219" y="164" width="5" height="71" fill="#6f5238"/>'+
+        '<rect x="96" y="164" width="128" height="6" fill="#80613f"/>'+
+        '<rect x="90" y="160" width="140" height="4.5" rx="1.2" fill="url(#gWood)"/>'+
+        '<rect x="90" y="160" width="140" height="1.2" fill="rgba(255,255,255,.22)"/>'+
+        '<rect x="157" y="148" width="6" height="12" fill="#2a2d33"/><rect x="147" y="157.5" width="26" height="2.6" rx="1.2" fill="#23262b"/>'+
+        '<rect x="128" y="112" width="64" height="38" rx="2.2" fill="#101216"/>'+
+        '<rect x="130" y="114" width="60" height="33" fill="url(#gScreen)"/>'+
+        '<path d="M130 114 L160 114 L138 147 L130 147 Z" fill="rgba(255,255,255,.07)"/>'+
+        '<rect x="139" y="156.6" width="42" height="3" rx="1.2" fill="#d4d6da"/><ellipse cx="193" cy="158.8" rx="3.2" ry="1.7" fill="#d4d6da"/>'+
+        '<rect x="100" y="148" width="9" height="12" rx="2" fill="#cdb9a0"/>'+
+        '<path d="M104.5 148 q-8 -14 -3 -24 M104.5 148 q2 -14 11 -20 M104.5 148 q-2 -10 6 -16" stroke="#6f8b5a" stroke-width="1.7" fill="none"/>'+
+        '<ellipse cx="214" cy="159" rx="7" ry="1.6" fill="#2a2d33"/><path d="M214 159 L218 139 L207 127" stroke="#2a2d33" stroke-width="2" fill="none"/>'+
+        '<path d="M199 125 L214 120 L212 130 L201 132 Z" fill="#d8b44b"/>'+
+        '<rect x="198" y="153" width="6" height="7" rx="1.5" fill="#e9e3d8"/>';
+    }else if(id==="wall"){
+      m="";
     }else{
       m='<ellipse cx="160" cy="236.5" rx="124" ry="4.5" fill="rgba(0,0,0,.28)"/>'+
         '<rect x="30" y="190" width="36" height="45" rx="3" fill="url(#gWood)"/>'+
@@ -438,7 +458,7 @@ a.btn{text-decoration:none}
 
     var L=computeLayout(),left=(D.W-L.w)/2,top;
     if(st.photo)top=Math.max(0,D.H*0.42-L.h/2);
-    else top=(scene().top-GAP_ABOVE)-L.h;
+    else{var sc0=scene();top=sc0.center?sc0.center-L.h/2:(sc0.top-GAP_ABOVE)-L.h}
     L.pos.forEach(function(p){
       var f=p.it.f,d=dimsOf(f);
       var el=document.createElement("div");el.className="frame";el.tabIndex=0;el.setAttribute("role","img");
@@ -486,10 +506,10 @@ a.btn{text-decoration:none}
       if(L.w>D.W-4||L.h>D.H-4){cls="low";t="Too big for this photo";m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm, but the photo shows only about "+fmt(D.W)+" × "+fmt(D.H)+" cm of wall. If the scale looks wrong, tap “Set real size”."}
       else{cls="good";t="Drag the frames into place";m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm. The photo shows about "+fmt(D.W)+" cm of wall across."}
     }else{
-      var sc=scene(),availH=sc.top-GAP_ABOVE-TOP_MARGIN;
+      var sc=scene(),availH=sc.availH||(sc.top-GAP_ABOVE-TOP_MARGIN),where=(sc.id==="wall"?"on this wall":"above the "+sc.label);
       if(L.h>availH+0.5||L.w>W0-20){
         cls="low";t="Too big for this space";
-        m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm, but only about "+fmt(availH)+" cm of height is free above the "+sc.label+". Try smaller sizes, a row layout, or another room.";
+        m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm, but only about "+fmt(availH)+" cm of height is free "+where+". Try smaller sizes, a row layout, or another room.";
       }else{
         var r=L.w/sc.fw;
         if(r>1.05){cls="ok";t="Wider than the "+sc.label;m="Your gallery is "+fmt(L.w)+" cm wide and the "+sc.label+" is about "+sc.fw+" cm. Galleries usually look balanced at around two thirds to three quarters of the furniture’s width."}
