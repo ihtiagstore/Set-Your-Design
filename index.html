@@ -101,6 +101,10 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
     4px 8px 12px rgba(0,0,0,.20),
     10px 20px 32px rgba(0,0,0,.14)}
 .frame:active{cursor:grabbing}
+.frame.fw{background:linear-gradient(145deg,#fbf9f4 0%,#ebe7dd 45%,#d3cec2 100%);
+  box-shadow:inset 1px 1px 1px rgba(255,255,255,.95),inset -1px -1px 2px rgba(0,0,0,.2),1px 2px 2px rgba(0,0,0,.26),4px 8px 12px rgba(0,0,0,.18),10px 20px 32px rgba(0,0,0,.12)}
+.frame.fo{background:repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 2px,rgba(255,255,255,.05) 2px 5px),linear-gradient(145deg,#c99c6a 0%,#a77a4e 45%,#8a6240 100%);
+  box-shadow:inset 1px 1px 1px rgba(255,255,255,.25),inset -1px -1px 2px rgba(0,0,0,.45),1px 2px 2px rgba(0,0,0,.28),4px 8px 12px rgba(0,0,0,.2),10px 20px 32px rgba(0,0,0,.14)}
 #stage.calibrating .frame{pointer-events:none}
 .artwrap{position:relative;line-height:0;width:100%;height:100%}
 .artwrap canvas{display:block}
@@ -156,7 +160,17 @@ a.btn{text-decoration:none}
         <div class="chips" id="presets"></div>
         <h3 class="sub">Size of each frame</h3>
         <ul class="list" id="list"></ul>
-        <p class="hint">Sizes are the picture size. The black frame adds about 2.5 cm on each side.</p>
+        <p class="hint">Sizes are the picture size. The frame adds about 2.5 cm on each side.</p>
+      </div>
+
+      <div class="block">
+        <h2>Frame style</h2>
+        <h3>Frame colour</h3>
+        <div class="opts" id="fcolor" role="radiogroup" aria-label="Frame colour"></div>
+        <h3 class="sub">Front</h3>
+        <div class="opts" id="front" role="radiogroup" aria-label="Frame front"></div>
+        <p class="hint" id="frontNote"></p>
+        <p class="hint">Every frame comes with a self-adhesive wall hook, so you can hang it without drilling any holes.</p>
       </div>
 
       <div class="block">
@@ -216,6 +230,9 @@ a.btn{text-decoration:none}
     {id:"wall",name:"Empty wall",center:90,availH:200,fw:280,label:"wall"}
   ];
   var WALLS=[{n:"Plaster",c:"#E4DED2"},{n:"Sage",c:"#B7C1AE"},{n:"Clay",c:"#D1B8A4"},{n:"Ink",c:"#3B404C"},{n:"White",c:"#F6F4EF"},{n:"Beige",c:"#D8C7A8"},{n:"Black",c:"#151515"}];
+  var FRAME_COLORS=[{n:"Black",cls:"fk",c:"#1d1a17"},{n:"White",cls:"fw",c:"#f3f0ea"},{n:"Wood",cls:"fo",c:"#b98b5a"}];
+  var FRONTS=[{id:"acrylic",n:"Acrylic",note:"Acrylic front is included in the price."},{id:"glass",n:"Glass (+EGP 10 each)",note:"Glass front: +EGP 10 per frame. Shatter-resistant."}];
+  var GLASS_FEE=10;
   var LAYOUTS=[{id:"row",n:"Row"},{id:"centered",n:"Centred"},{id:"grid",n:"Grid"},{id:"column",n:"Column"}];
   var PRESETS=[
     {n:"Classic trio",sizes:[1,1,1],layout:"row"},
@@ -236,7 +253,7 @@ a.btn{text-decoration:none}
   var $=function(id){return document.getElementById(id)};
   function fmt(n){return Math.round(n).toLocaleString("en-US")}
 
-  var st={scene:0,photo:false,wall:0,layout:"row",gap:6,frames:[],nextId:1,nextArt:0,
+  var st={fc:0,front:"acrylic",scene:0,photo:false,wall:0,layout:"row",gap:6,frames:[],nextId:1,nextArt:0,
     photoUrl:null,photoAR:.75,photoWallW:300,calib:{on:false,pts:[]},fee:null,govName:""};
   var arts=[];
 
@@ -461,7 +478,7 @@ a.btn{text-decoration:none}
     else{var sc0=scene();top=sc0.center?sc0.center-L.h/2:(sc0.top-GAP_ABOVE)-L.h}
     L.pos.forEach(function(p){
       var f=p.it.f,d=dimsOf(f);
-      var el=document.createElement("div");el.className="frame";el.tabIndex=0;el.setAttribute("role","img");
+      var el=document.createElement("div");el.className="frame "+FRAME_COLORS[st.fc].cls;el.tabIndex=0;el.setAttribute("role","img");
       el.setAttribute("aria-label","Frame "+(st.frames.indexOf(f)+1)+", "+d.w+" by "+d.h+" centimetres. Drag it, or use the arrow keys, to move it.");
       el.style.width=(p.it.w*k)+"px";el.style.height=(p.it.h*k)+"px";el.style.padding=(FB*k)+"px";
       var wrap=document.createElement("div");wrap.className="artwrap";
@@ -617,11 +634,11 @@ a.btn{text-decoration:none}
     if(keep){var el=ul.querySelector('[data-id="'+keep.id+'"][data-role="'+keep.role+'"]');if(el)el.focus()}
   }
   function pricing(){
-    var n=st.frames.length,sub=st.frames.reduce(function(s,f){return s+SIZES[f.size].price},0);
+    var n=st.frames.length,base=st.frames.reduce(function(s,f){return s+SIZES[f.size].price},0),glass=st.front==="glass"?GLASS_FEE*n:0,sub=base+glass;
     var free=n>=SHIP_FREE_FROM,disc=n>=DISC_FROM?DISC:0;
     var pending=!free&&n>0&&st.fee===null;
     var ship=(n===0||free||pending)?0:st.fee;
-    return {n:n,sub:sub,disc:disc,ship:ship,free:free,pending:pending,total:Math.max(0,sub-disc)+ship};
+    return {n:n,base:base,glass:glass,sub:sub,disc:disc,ship:ship,free:free,pending:pending,total:Math.max(0,sub-disc)+ship};
   }
   function renderSummary(){
     var counts={};
@@ -631,6 +648,7 @@ a.btn{text-decoration:none}
     Object.keys(counts).forEach(function(k){var s=SIZES[k];line(counts[k]+" × "+s.w+" × "+s.h+" cm","EGP "+fmt(counts[k]*s.price))});
     var P=pricing();
     if(P.n){
+      if(P.glass)line("Glass front ("+P.n+" × EGP "+GLASS_FEE+")","EGP "+fmt(P.glass));
       line("Subtotal","EGP "+fmt(P.sub));
       if(P.disc)line("Set discount ("+DISC_FROM+"+ frames)","− EGP "+fmt(P.disc),"save");
       line("التوصيل",P.free?"مجاني":(P.pending?"اختر المحافظة":P.ship+" جنيه"),P.free?"save":"",true);
@@ -682,6 +700,10 @@ a.btn{text-decoration:none}
   function swatch(lab,c,n){var d=document.createElement("span");d.className="dot";d.style.background=c;lab.appendChild(d);lab.appendChild(document.createTextNode(n))}
   makeRadios($("scenes"),"scene",SCENES,st.scene,function(s,l){l.textContent=s.name},function(i){st.scene=i;st.photo=false;st.calib={on:false,pts:[]};resetOffsets();renderAll()});
   makeRadios($("walls"),"wall",WALLS,st.wall,function(w,l){swatch(l,w.c,w.n)},function(i){st.wall=i;renderStage()});
+  makeRadios($("fcolor"),"fcolor",FRAME_COLORS,0,function(c,l){swatch(l,c.c,c.n)},function(i){st.fc=i;renderStage()});
+  function setFrontNote(){$("frontNote").textContent=FRONTS.filter(function(f){return f.id===st.front})[0].note}
+  makeRadios($("front"),"front",FRONTS,0,function(f,l){l.textContent=f.n},function(i){st.front=FRONTS[i].id;setFrontNote();renderSummary();invalidate()});
+  setFrontNote();
   var counts=[1,2,3,4,5,6,7,8,9,10];
   makeRadios($("count"),"count",counts,-1,function(n,l){l.textContent=n},function(i){setCount(i+1)});
   function buildLayouts(){
@@ -722,6 +744,8 @@ a.btn{text-decoration:none}
     L.push("My frame selection");
     L.push("Room: "+(st.photo?"My own wall photo":scene().name)+" · Layout: "+LAYOUTS.filter(function(l){return l.id===st.layout})[0].n);
     st.frames.forEach(function(f,i){var d=dimsOf(f);L.push((i+1)+") "+d.w+" × "+d.h+" cm"+(f.portrait?"":" (landscape)")+" — EGP "+SIZES[f.size].price+" · "+(f.file?"photo: "+fileNameFor(f,i):"no photo uploaded"))});
+    L.push("Frame colour: "+FRAME_COLORS[st.fc].n+" · Front: "+(st.front==="glass"?"Glass (shatter-resistant)":"Acrylic"));
+    if(P.glass)L.push("Glass front: "+P.n+" × EGP "+GLASS_FEE+" = EGP "+fmt(P.glass));
     L.push("Subtotal: EGP "+fmt(P.sub));
     if(P.disc)L.push("Discount: − EGP "+fmt(P.disc));
     L.push("Delivery: "+(P.free?"Free":(P.pending?"(governorate not chosen)":P.ship+" EGP"))+(st.govName?" – "+st.govName:""));
