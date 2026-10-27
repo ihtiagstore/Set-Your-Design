@@ -351,6 +351,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   <p class="hint" data-i18n="galIntro" style="margin-top:0"></p>
   <div class="opts galcats" id="galCats" role="radiogroup"></div>
   <div class="gal" id="galGrid"></div>
+  <button class="btn ghost" type="button" id="galMore" hidden style="margin-top:14px;width:100%"></button>
   <p class="hint" id="galMsg" hidden></p>
   <button class="btn" type="button" id="galCta" data-i18n="galCta" style="margin-top:18px"></button>
 </section>
@@ -495,7 +496,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     cal_err_close:"The two points are too close. Cancel and tap them again, further apart.",
     tapHint:"Tap an empty frame on the wall to add your photo.",tapTitle:"Tap to add your photo",
     step3:"Our work",galTitle:"Our work",galIntro:"Real frames we made. Tap any picture to see it bigger.",
-    galAll:"All",galEmpty:"No work added yet.",galError:"Could not load the gallery. Please try again.",
+    galAll:"All",galMore:function(n){return "Show more ("+n+")"},galEmpty:"No work added yet.",galError:"Could not load the gallery. Please try again.",
     galClose:"Close",galPrev:"Previous",galNext:"Next",galCta:"Design your own wall",galOf:function(i,n){return "Item "+i+" of "+n},galPlay:"Play video",
     hookTitle:"Wall hooks",hookDesc:"Self-adhesive hook, no drilling. Hang your frame without making a hole.",
     hookOffer:"EGP 10 each · any 3 hooks for EGP 10",hookQty:"Number of hooks",hookMinus:"Fewer hooks",hookPlus:"More hooks",
@@ -598,7 +599,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     cal_err_close:"النقطتين قريبين أوي. الغي وحدّدهم تاني بعيد عن بعض.",
     tapHint:"اضغط على أي برواز فاضي على الحيطة عشان تضيف صورتك.",tapTitle:"اضغط لإضافة صورتك",
     step3:"من شغلنا",galTitle:"من شغلنا",galIntro:"شغل حقيقي من عندنا. اضغط على أي صورة تكبّرها.",
-    galAll:"الكل",galEmpty:"لسه مفيش شغل متضاف.",galError:"ماقدرناش نحمّل المعرض. حاول تاني.",
+    galAll:"الكل",galMore:function(n){return "اعرض المزيد ("+n+")"},galEmpty:"لسه مفيش شغل متضاف.",galError:"ماقدرناش نحمّل المعرض. حاول تاني.",
     galClose:"إغلاق",galPrev:"السابق",galNext:"التالي",galCta:"صمّم حيطتك",galOf:function(i,n){return "العنصر "+i+" من "+n},galPlay:"شغّل الفيديو",
     hookTitle:"مسمار الحيطة اللاصق",hookDesc:"مسمار لاصق للحيطة من غير خرم. علّق بروازك من غير ما تعمل أي خرم.",
     hookOffer:"10 جنيه للواحد · وكل 3 مسامير بـ 10 جنيه",hookQty:"عدد المسامير",hookMinus:"قلّل المسامير",hookPlus:"زوّد المسامير",
@@ -1394,7 +1395,9 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   $("galCta").addEventListener("click",function(){showStep(1,true)});
 
   /* ---------- gallery ("our work") ---------- */
-  var gal={loaded:false,cats:[],items:[],cat:"all",list:[],idx:-1,opener:null};
+  var MEDIA_BASE="media/";
+  var gal={loaded:false,cats:[],items:[],cat:"all",list:[],idx:-1,opener:null,limit:30};
+  var GAL_PAGE=30;
   function isVideo(it){return it.type==="video"||/\.(mp4|webm|mov|m4v)$/i.test(it.file)}
   function catLabel(c){return LANG==="ar"?(c.ar||c.en||c.id):(c.en||c.ar||c.id)}
   function loadGallery(){
@@ -1406,7 +1409,10 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     }
     var pv=window.__PREVIEW__;
     if(pv&&pv.manifest){ready(pv.manifest);return}
-    fetch("media/gallery.json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw new Error("http");return r.json()}).then(ready).catch(function(){var g=$("galMsg");g.hidden=false;g.textContent=t("galError")});
+    function get(url){return fetch(url,{cache:"no-cache"}).then(function(r){if(!r.ok)throw new Error("http");return r.json()})}
+    get("media/gallery.json").then(function(d){MEDIA_BASE="media/";ready(d)},function(){
+      return get("gallery.json").then(function(d){MEDIA_BASE="";ready(d)});
+    }).catch(function(){var g=$("galMsg");g.hidden=false;g.textContent=t("galError")});
   }
   function renderGallery(){
     var used={};gal.items.forEach(function(it){used[it.cat]=(used[it.cat]||0)+1});
@@ -1417,19 +1423,23 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     $("galMsg").hidden=gal.items.length>0;if(!gal.items.length)$("galMsg").textContent=t("galEmpty");
     renderGrid();
   }
-  function renderGrid(){
+  function renderGrid(keepLimit){
     var grid=$("galGrid");grid.innerHTML="";
     gal.list=gal.items.filter(function(it){return gal.cat==="all"||it.cat===gal.cat});
-    gal.list.forEach(function(it,i){
+    if(keepLimit!==true)gal.limit=GAL_PAGE;
+    gal.list.slice(0,gal.limit).forEach(function(it,i){
       var b=document.createElement("button");b.type="button";b.className="gitem";
-      var v=isVideo(it),src=v?(it.poster?"media/"+it.poster:""):"media/"+it.file;
+      var v=isVideo(it),src=v?(it.poster?MEDIA_BASE+it.poster:""):MEDIA_BASE+it.file;
       if(src){var im=document.createElement("img");im.alt="";im.loading="lazy";im.decoding="async";im.src=mediaUrl(src);b.appendChild(im)}
       if(v){var pl=document.createElement("span");pl.className="play";pl.innerHTML="<span>▶</span>";b.appendChild(pl);b.setAttribute("aria-label",t("galPlay"))}
       else b.setAttribute("aria-label",t("galOf",i+1,gal.list.length));
       b.addEventListener("click",function(){openLb(i,b)});
       grid.appendChild(b);
     });
+    var more=$("galMore"),left=gal.list.length-gal.limit;
+    more.hidden=left<=0;if(left>0)more.textContent=t("galMore",left);
   }
+  $("galMore").addEventListener("click",function(){gal.limit+=GAL_PAGE;renderGrid(true)});
   function setLbLabels(){
     $("lbClose").setAttribute("aria-label",t("galClose"));$("lbPrev").setAttribute("aria-label",t("galPrev"));$("lbNext").setAttribute("aria-label",t("galNext"));
     $("lb").setAttribute("aria-label",t("galTitle"));
@@ -1440,10 +1450,10 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     body.innerHTML="";
     if(isVideo(it)){
       var vd=document.createElement("video");vd.controls=true;vd.autoplay=true;vd.playsInline=true;vd.setAttribute("playsinline","");vd.preload="metadata";
-      if(it.poster)vd.poster=mediaUrl("media/"+it.poster);
-      vd.src=mediaUrl("media/"+it.file);body.appendChild(vd);
+      if(it.poster)vd.poster=mediaUrl(MEDIA_BASE+it.poster);
+      vd.src=mediaUrl(MEDIA_BASE+it.file);body.appendChild(vd);
     }else{
-      var im=document.createElement("img");im.alt="";im.src=mediaUrl("media/"+it.file);body.appendChild(im);
+      var im=document.createElement("img");im.alt="";im.src=mediaUrl(MEDIA_BASE+it.file);body.appendChild(im);
     }
     $("lbPrev").hidden=$("lbNext").hidden=gal.list.length<2;
   }
