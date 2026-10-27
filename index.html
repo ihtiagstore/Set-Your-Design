@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Build your gallery wall</title>
+<title>صمّم تشكيلة براويزك</title>
 <style>
 :root{
   --bg:#f2ebdd; --panel:#faf6ec; --ink:#2b1d14; --muted:#6a5a4c; --line:#d9ccb2;
@@ -122,8 +122,52 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
 .btns{display:grid;gap:8px;margin-top:14px}
 a.btn{text-decoration:none}
 .btn[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.handle{appearance:none;-webkit-appearance:none;background:transparent;border:1px solid var(--line);border-radius:3px;width:34px;min-height:58px;flex:none;cursor:grab;touch-action:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;padding:0}
+.handle:active{cursor:grabbing}
+.handle:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.item.dragging{outline:2px solid var(--accent);background:var(--chip)}
+.cust{margin-top:14px;display:grid;gap:6px}
+.cust label,.cust .payl{font-weight:600;margin-top:6px}
+.cust input[type=text],.cust input[type=tel]{font:inherit;min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--ink);width:100%}
+.cust input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 [hidden]{display:none !important}
+/* ---- language + RTL ---- */
+html[lang="ar"]{--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif;--serif:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif}
+html[lang="ar"] h1,html[lang="ar"] h2,html[lang="ar"] .total{font-weight:700}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;flex:none}
+.langbtn{appearance:none;-webkit-appearance:none;background:transparent;color:var(--ink);border:0;font:inherit;font-weight:600;min-height:44px;padding:0 16px;cursor:pointer}
+.langbtn[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink)}
+.langbtn:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+#stage{direction:ltr}
+.cust input[type=text],.cust input[type=tel]{text-align:start}
+.addbadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;border-radius:50%;background:rgba(255,255,255,.92);color:#111;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
+.frame.nophoto{cursor:pointer}
+/* ---- bottom bar (phones) ---- */
+.bar{display:none}
+@media (max-width:959px){
+  .page{padding-bottom:120px}
+  .bar{display:flex;align-items:center;gap:12px;position:fixed;left:0;right:0;bottom:0;z-index:15;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.14);transition:transform .2s}
+  .bar.hide{transform:translateY(110%)}
+  .barinfo{flex:1;min-width:0}
+  .bartotal{font-family:var(--serif);font-weight:600;font-size:1.3rem;line-height:1.2}
+  .barmsg{font-size:.85rem;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .barmsg.ok{color:var(--good)}
+}
+@media (prefers-reduced-motion: reduce){.bar{transition:none}}
+
+/* ---- steps ---- */
+.steps{display:flex;gap:8px;margin:0 0 18px}
+.stepbtn{appearance:none;-webkit-appearance:none;flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-weight:600;border-radius:3px;cursor:pointer}
+.stepbtn .num{display:inline-flex;width:24px;height:24px;border-radius:50%;border:1px solid currentColor;align-items:center;justify-content:center;font-size:.85rem}
+.stepbtn[aria-current="step"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.stepbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.miss{margin-top:12px;border:1px solid var(--warn);color:var(--warn);border-radius:4px;padding:10px 12px;font-size:.93rem}
+.miss.ok{border-color:var(--good);color:var(--good)}
+.bar.off{display:none !important}
+@media (max-width:959px){.stagePanel.order{position:static}}
+#chat[aria-disabled="true"]{pointer-events:auto;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -131,76 +175,111 @@ a.btn{text-decoration:none}
 <script>window.addEventListener("error",function(e){var b=document.getElementById("errbar");if(!b)return;b.hidden=false;b.textContent="Something went wrong: "+(e.message||"unknown error")+" (line "+(e.lineno||"?")+"). Please send a screenshot of this message."});</script>
 <div class="page">
   <header>
-    <h1>Build your gallery wall</h1>
-    <p>Choose how many frames you want, pick their sizes, and see them above your sofa, TV or bed at true size. Or try them on a photo of your own wall.</p>
+    <div class="topbar">
+      <h1 data-i18n="title"></h1>
+      <div class="lang" role="group" aria-label="Language / اللغة">
+        <button type="button" class="langbtn" data-lang="ar" aria-pressed="true">عربي</button>
+        <button type="button" class="langbtn" data-lang="en" aria-pressed="false">English</button>
+      </div>
+    </div>
+    <p data-i18n="intro"></p>
   </header>
 
   <div class="grid">
-    <div class="panel" aria-label="Gallery builder">
+    <div class="panel" id="leftPanel">
+      <nav class="steps" aria-label="Steps">
+        <button type="button" class="stepbtn" data-step="1" aria-current="step"><span class="num">1</span><span data-i18n="step1"></span></button>
+        <button type="button" class="stepbtn" data-step="2"><span class="num">2</span><span data-i18n="step2"></span></button>
+      </nav>
+      <div id="designPane">
       <div class="block">
-        <h2>Room</h2>
-        <div class="opts" id="scenes" role="radiogroup" aria-label="Where will it hang"></div>
+        <h2 data-i18n="room"></h2>
+        <div class="opts" id="scenes" role="radiogroup"></div>
         <div class="row sub">
-          <button class="btn ghost sm" type="button" id="wallPick">Use a photo of my wall</button>
-          <button class="btn ghost sm" type="button" id="calibStart" hidden>Set real size</button>
-          <button class="btn ghost sm" type="button" id="wallClear" hidden>Remove photo</button>
+          <button class="btn ghost sm" type="button" id="wallPick" data-i18n="wallPick"></button>
+          <button class="btn ghost sm" type="button" id="calibStart" data-i18n="calibStart" hidden></button>
+          <button class="btn ghost sm" type="button" id="wallClear" data-i18n="wallClear" hidden></button>
         </div>
-        <p class="hint" id="photoHint" hidden>Your frames are shown at true size once you set the real size of something in the photo. Take the photo straight on to the wall for the best result.</p>
+        <p class="hint" id="photoHint" data-i18n="photoHint" hidden></p>
         <div id="wallColorBox">
-          <h3 class="sub">Wall colour</h3>
-          <div class="opts" id="walls" role="radiogroup" aria-label="Wall colour"></div>
+          <h3 class="sub" data-i18n="wallColour"></h3>
+          <div class="opts" id="walls" role="radiogroup"></div>
         </div>
       </div>
 
       <div class="block">
-        <h2>Your frames</h2>
-        <h3>How many frames?</h3>
-        <div class="opts num" id="count" role="radiogroup" aria-label="Number of frames"></div>
-        <h3 class="sub">Or start from a set</h3>
+        <h2 data-i18n="yourFrames"></h2>
+        <h3 data-i18n="howMany"></h3>
+        <div class="opts num" id="count" role="radiogroup"></div>
+        <div class="row sub"><button class="btn sm" type="button" id="multiBtn" data-i18n="multiBtn"></button></div>
+        <p class="hint" data-i18n="multiHint"></p>
+        <h3 class="sub" data-i18n="startSet"></h3>
         <div class="chips" id="presets"></div>
-        <h3 class="sub">Size of each frame</h3>
+        <h3 class="sub" data-i18n="sizeEach"></h3>
         <ul class="list" id="list"></ul>
-        <p class="hint">Sizes are the picture size. The frame adds about 2.5 cm on each side.</p>
+        <p class="hint" data-i18n="sizesHint"></p>
       </div>
 
       <div class="block">
-        <h2>Frame style</h2>
-        <h3>Frame colour</h3>
-        <div class="opts" id="fcolor" role="radiogroup" aria-label="Frame colour"></div>
-        <h3 class="sub">Front</h3>
-        <div class="opts" id="front" role="radiogroup" aria-label="Frame front"></div>
+        <h2 data-i18n="frameStyle"></h2>
+        <h3 data-i18n="frameColour"></h3>
+        <div class="opts" id="fcolor" role="radiogroup"></div>
+        <h3 class="sub" data-i18n="front"></h3>
+        <div class="opts" id="front" role="radiogroup"></div>
         <p class="hint" id="frontNote"></p>
-        <p class="hint">Every frame comes with a self-adhesive wall hook, so you can hang it without drilling any holes.</p>
+        <p class="hint" data-i18n="hookHint"></p>
       </div>
 
       <div class="block">
-        <h2>Arrangement</h2>
-        <div class="opts" id="layouts" role="radiogroup" aria-label="Layout"></div>
-        <h3 class="sub">Space between frames: <span id="gapv">6</span> cm</h3>
-        <input type="range" id="gap" min="2" max="16" step="1" value="6" aria-label="Space between frames in centimetres">
-        <p class="hint">Drag any frame on the wall to fine-tune it. Changing the layout or the room resets the positions.</p>
+        <h2 data-i18n="arrangement"></h2>
+        <div class="opts" id="layouts" role="radiogroup"></div>
+        <h3 class="sub" id="gapLabel"></h3>
+        <input type="range" id="gap" min="2" max="16" step="1" value="6">
+        <p class="hint" data-i18n="arrHint"></p>
       </div>
 
+      <div class="block" id="nextBlock">
+        <div class="promo" id="promo2" aria-live="polite"></div>
+        <button class="btn" type="button" id="nextBtn" data-i18n="goOrder" style="width:100%;margin-top:12px"></button>
+      </div>
+      </div>
+
+      <div id="orderPane" hidden>
       <div class="block">
-        <h2>Your set</h2>
+        <button class="btn ghost sm" type="button" id="backBtn" data-i18n="goDesign"></button>
+        <div class="miss" id="missBox" role="status" aria-live="polite"></div>
+      </div>
+      <div class="block" id="orderBlock">
+        <h2 data-i18n="yourSet"></h2>
         <div class="promo" id="promo" role="status" aria-live="polite"></div>
         <ul class="lines" id="lines"></ul>
-        <div class="ship" dir="rtl">
-          <label for="gov">التوصيل إلى</label>
-          <select id="gov" dir="rtl"></select>
+        <div class="ship">
+          <label for="gov" data-i18n="deliveryTo"></label>
+          <select id="gov"></select>
         </div>
-        <div class="sum"><span style="font-weight:600">Total</span><span class="total" id="total">EGP 0</span></div>
+        <div class="cust">
+          <label for="cName" data-i18n="custName"></label>
+          <input id="cName" type="text" autocomplete="name" dir="auto">
+          <label for="cArea" data-i18n="custArea"></label>
+          <input id="cArea" type="text" autocomplete="address-level2" dir="auto">
+          <label for="cPhone" data-i18n="custPhone"></label>
+          <input id="cPhone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="01XXXXXXXXX">
+          <div class="payl" data-i18n="custPay"></div>
+          <div class="opts" id="pay" role="radiogroup"></div>
+        </div>
+        <div class="sum"><span style="font-weight:600" data-i18n="total"></span><span class="total" id="total"></span></div>
         <div class="btns">
-          <a class="btn" id="chat" href="#" target="_blank" rel="noopener" hidden>1. Send to WhatsApp</a>
-          <button class="btn" type="button" id="send">Send my design on WhatsApp</button>
-          <button class="btn ghost" type="button" id="copy">Copy my selection</button>
+          <a class="btn" id="chat" href="#" target="_blank" rel="noopener" data-i18n="btn_chat" hidden></a>
+          <button class="btn" type="button" id="send"></button>
+          <button class="btn ghost" type="button" id="copy" data-i18n="btn_copy"></button>
         </div>
-        <p class="hint" id="sendHint">Your pictures stay on your phone until you choose to send them.</p>
+        <p class="hint" id="sendHint" data-i18n="sendHint"></p>
         <p class="status" id="status" role="status" aria-live="polite"></p>
+      </div>
       </div>
     </div>
 
-    <section class="panel stagePanel" id="stagePanel" aria-label="Wall preview">
+    <section class="panel stagePanel" id="stagePanel">
       <div id="stage">
         <svg id="scene" viewBox="0 0 320 250" preserveAspectRatio="none" aria-hidden="true"></svg>
         <svg id="calibSvg" aria-hidden="true"></svg>
@@ -208,44 +287,51 @@ a.btn{text-decoration:none}
       <div class="calib" id="calib" hidden>
         <p id="calibMsg"></p>
         <div class="row" id="calibRow" hidden>
-          <label for="calibCm">Real length (cm)</label>
-          <input id="calibCm" type="number" inputmode="decimal" min="5" max="1000" step="any" style="width:110px">
-          <button class="btn sm" type="button" id="calibApply">Apply</button>
+          <label for="calibCm" data-i18n="cal_label"></label>
+          <input id="calibCm" type="number" inputmode="decimal" min="5" max="1000" step="any" style="width:110px" dir="ltr">
+          <button class="btn sm" type="button" id="calibApply" data-i18n="cal_apply"></button>
         </div>
-        <button class="btn ghost sm" type="button" id="calibCancel" style="margin-top:8px">Cancel</button>
+        <button class="btn ghost sm" type="button" id="calibCancel" data-i18n="cal_cancel" style="margin-top:8px"></button>
       </div>
       <div class="fit good" id="fit" role="status" aria-live="polite"><b id="fitT"></b><span id="fitM"></span></div>
+      <p class="hint" id="tapHint" data-i18n="tapHint" hidden></p>
     </section>
   </div>
 </div>
 
+<div class="bar" id="bar">
+  <div class="barinfo"><div class="bartotal" id="barTotal"></div><div class="barmsg" id="barMsg"></div></div>
+  <button class="btn" type="button" id="barBtn" data-i18n="barContinue"></button>
+</div>
 <script>
 (function(){
   var SIZES=[{w:20,h:30,price:200},{w:30,h:40,price:300},{w:40,h:50,price:400},{w:50,h:70,price:620}];
   var SCENES=[
-    {id:"sofa",name:"Above the sofa",top:150,fw:200,label:"sofa"},
-    {id:"tv",name:"Above the TV",top:131,fw:150,label:"TV unit"},
-    {id:"bed",name:"Above the bed",top:125,fw:180,label:"bed"},
-    {id:"desk",name:"Above the computer",top:112,fw:140,label:"desk"},
-    {id:"wall",name:"Empty wall",center:90,availH:200,fw:280,label:"wall"}
+    {id:"sofa",top:150,fw:200},
+    {id:"tv",top:131,fw:150},
+    {id:"bed",top:125,fw:180},
+    {id:"desk",top:112,fw:140},
+    {id:"wall",center:90,availH:200,fw:280}
   ];
-  var WALLS=[{n:"Plaster",c:"#E4DED2"},{n:"Sage",c:"#B7C1AE"},{n:"Clay",c:"#D1B8A4"},{n:"Ink",c:"#3B404C"},{n:"White",c:"#F6F4EF"},{n:"Beige",c:"#D8C7A8"},{n:"Black",c:"#151515"}];
-  var FRAME_COLORS=[{n:"Black",cls:"fk",c:"#1d1a17"},{n:"White",cls:"fw",c:"#f3f0ea"},{n:"Wood",cls:"fo",c:"#b98b5a"}];
-  var FRONTS=[{id:"acrylic",n:"Acrylic",note:"Acrylic front is included in the price."},{id:"glass",n:"Glass (+EGP 10 each)",note:"Glass front: +EGP 10 per frame. Shatter-resistant."}];
+  var WALLS=[{id:"plaster",c:"#E4DED2"},{id:"sage",c:"#B7C1AE"},{id:"clay",c:"#D1B8A4"},{id:"ink",c:"#3B404C"},{id:"white",c:"#F6F4EF"},{id:"beige",c:"#D8C7A8"},{id:"black",c:"#151515"}];
+  var FRAME_COLORS=[{id:"black",cls:"fk",c:"#1d1a17"},{id:"white",cls:"fw",c:"#f3f0ea"},{id:"wood",cls:"fo",c:"#b98b5a"}];
+  var FRONTS=[{id:"acrylic"},{id:"glass"}];
   var GLASS_FEE=10;
-  var LAYOUTS=[{id:"row",n:"Row"},{id:"centered",n:"Centred"},{id:"grid",n:"Grid"},{id:"column",n:"Column"}];
+  var PAYS=[{id:"cash"},{id:"instapay"},{id:"wallet"}];
+  var LAYOUTS=[{id:"row"},{id:"centered"},{id:"grid"},{id:"column"}];
   var PRESETS=[
-    {n:"Classic trio",sizes:[1,1,1],layout:"row"},
-    {n:"Centre piece",sizes:[0,3,0],layout:"row"},
-    {n:"Pair",sizes:[2,2],layout:"row"},
-    {n:"Gallery wall",sizes:[1,3,2],layout:"centered"},
-    {n:"Grid of six",sizes:[0,0,0,0,0,0],layout:"grid"}
+    {id:"trio",sizes:[1,1,1],layout:"row"},
+    {id:"centre",sizes:[0,3,0],layout:"row"},
+    {id:"pair",sizes:[2,2],layout:"row"},
+    {id:"gallery",sizes:[1,3,2],layout:"centered"},
+    {id:"six",sizes:[0,0,0,0,0,0],layout:"grid"}
   ];
   var ZONES=[
-    {n:"القاهرة والجيزة والإسكندرية",fee:70,gov:["القاهرة","الجيزة","الإسكندرية"]},
-    {n:"الوجه البحري",fee:90,gov:["القليوبية","الشرقية","الدقهلية","الغربية","المنوفية","كفر الشيخ","البحيرة","دمياط","بورسعيد","الإسماعيلية","السويس"]},
-    {n:"الصعيد وباقي المحافظات",fee:120,gov:["الفيوم","بني سويف","المنيا","أسيوط","سوهاج","قنا","الأقصر","أسوان","البحر الأحمر","الوادي الجديد","مطروح","شمال سيناء","جنوب سيناء"]}
+    {id:"cairo",fee:70,gov:[["القاهرة","Cairo"],["الجيزة","Giza"],["الإسكندرية","Alexandria"]]},
+    {id:"delta",fee:90,gov:[["القليوبية","Qalyubia"],["الشرقية","Sharqia"],["الدقهلية","Dakahlia"],["الغربية","Gharbia"],["المنوفية","Monufia"],["كفر الشيخ","Kafr El Sheikh"],["البحيرة","Beheira"],["دمياط","Damietta"],["بورسعيد","Port Said"],["الإسماعيلية","Ismailia"],["السويس","Suez"]]},
+    {id:"upper",fee:120,gov:[["الفيوم","Faiyum"],["بني سويف","Beni Suef"],["المنيا","Minya"],["أسيوط","Assiut"],["سوهاج","Sohag"],["قنا","Qena"],["الأقصر","Luxor"],["أسوان","Aswan"],["البحر الأحمر","Red Sea"],["الوادي الجديد","New Valley"],["مطروح","Matrouh"],["شمال سيناء","North Sinai"],["جنوب سيناء","South Sinai"]]}
   ];
+  var COUNTS=[1,2,3,4,5,6,7,8,9,10];
   var W0=320,H0=250,FLOOR0=235,FB=2.5,GAP_ABOVE=20,TOP_MARGIN=10,MAX=10;
   var SHIP_FREE_FROM=4,DISC_FROM=6,DISC=50;
   var WHATSAPP_NUMBER="201102331870"; /* change to your business number later: international format, no + or spaces */
@@ -253,8 +339,218 @@ a.btn{text-decoration:none}
   var $=function(id){return document.getElementById(id)};
   function fmt(n){return Math.round(n).toLocaleString("en-US")}
 
-  var st={fc:0,front:"acrylic",scene:0,photo:false,wall:0,layout:"row",gap:6,frames:[],nextId:1,nextArt:0,
-    photoUrl:null,photoAR:.75,photoWallW:300,calib:{on:false,pts:[]},fee:null,govName:""};
+  /* ---------- text in both languages ---------- */
+  function arFrames(n){return n===1?"برواز واحد":n===2?"بروازين":n+" براويز"}
+  function enFrames(n){return n+" more frame"+(n===1?"":"s")}
+  var I18N={
+  en:{
+    docTitle:"Build your gallery wall",
+    title:"Build your gallery wall",
+    intro:"Choose how many frames you want, pick their sizes, and see them above your sofa, TV or bed at true size. Or try them on a photo of your own wall.",
+    cm:"cm",free:"Free",
+    room:"Room",
+    scene_sofa:"Above the sofa",scene_tv:"Above the TV",scene_bed:"Above the bed",scene_desk:"Above the computer",scene_wall:"Empty wall",
+    label_sofa:"sofa",label_tv:"TV unit",label_bed:"bed",label_desk:"desk",label_wall:"wall",
+    wallPick:"Use a photo of my wall",calibStart:"Set real size",wallClear:"Remove photo",
+    photoHint:"Your frames are shown at true size once you set the real size of something in the photo. Take the photo straight on to the wall for the best result.",
+    wallColour:"Wall colour",
+    wall_plaster:"Plaster",wall_sage:"Sage",wall_clay:"Clay",wall_ink:"Ink",wall_white:"White",wall_beige:"Beige",wall_black:"Black",
+    yourFrames:"Your frames",howMany:"How many frames?",
+    multiBtn:"Upload all my photos at once",multiHint:"Choose several photos. They go into the frames in order.",
+    startSet:"Or start from a set",
+    preset_trio:"Classic trio",preset_centre:"Centre piece",preset_pair:"Pair",preset_gallery:"Gallery wall",preset_six:"Grid of six",
+    sizeEach:"Size of each frame",
+    sizesHint:"Sizes are the picture size. The frame adds about 2.5 cm on each side.",
+    emptyList:"No frames yet. Choose how many frames you want above.",
+    frameTitle:function(i,w,h){return "Frame "+i+" · "+w+" × "+h+" cm"},
+    yourPhoto:"your photo",samplePic:"sample picture",
+    q_sharp:"Sharp",q_soft:"Soft",q_low:"Low",q_add:"Add photo",
+    dpiTip:function(d){return d+" DPI at this size"},
+    b_landscape:"Make landscape",b_portrait:"Make portrait",b_upload:"Upload your photo",b_change:"Change photo",b_remove:"Remove",
+    a_reorder:function(i){return "Reorder frame "+i+": drag, or press the up and down arrow keys"},
+    a_dragTitle:"Drag to reorder",
+    a_up:function(i){return "Move frame "+i+" up"},a_down:function(i){return "Move frame "+i+" down"},
+    a_rotate:function(i){return "Rotate frame "+i},
+    a_upload:function(i){return "Upload your photo for frame "+i},a_change:function(i){return "Change photo of frame "+i},
+    a_remove:function(i){return "Remove frame "+i},a_size:function(i){return "Size of frame "+i},
+    a_frame:function(i,w,h){return "Frame "+i+", "+w+" by "+h+" centimetres. Drag it, or use the arrow keys, to move it."},
+    sizeOpt:function(w,h,p){return w+" × "+h+" cm · EGP "+p},
+    frameStyle:"Frame style",frameColour:"Frame colour",fc_black:"Black",fc_white:"White",fc_wood:"Wood",
+    front:"Front",front_acrylic:"Acrylic (recommended)",front_glass:"Glass (+EGP 10 each)",
+    note_acrylic:"Acrylic is lighter and safer. It is included in the price.",
+    note_glass:"Glass: +EGP 10 per frame. It is heavier and it can break.",
+    hookHint:"Every frame comes with a self-adhesive wall hook, so you can hang it without drilling any holes.",
+    arrangement:"Arrangement",layout_row:"Row",layout_centered:"Centred",layout_grid:"Grid",layout_column:"Column",
+    gapLabel:function(n){return "Space between frames: "+n+" cm"},
+    arrHint:"Drag any frame on the wall to fine-tune it. To swap two frames, drop one on top of the other, or use the dotted handle and the ↑ ↓ buttons in the list. In “Centred” the order follows the sizes. Changing the layout or the room resets the positions.",
+    yourSet:"Your set",total:"Total",
+    promo_0:function(a,b,c){return "Buy "+a+" or more frames for free delivery. Buy "+b+" or more for free delivery and EGP "+c+" off."},
+    promo_lt:function(n){return "Add "+enFrames(n)+" to get free delivery."},
+    promo_mid:function(n,c){return "Free delivery unlocked. Add "+enFrames(n)+" for EGP "+c+" off as well."},
+    promo_done:function(c){return "Free delivery and EGP "+c+" off applied."},
+    line_glass:function(n,fee){return "Glass front ("+n+" × EGP "+fee+")"},
+    line_sub:"Subtotal",line_disc:function(n){return "Set discount ("+n+"+ frames)"},line_delivery:"Delivery",
+    pick_gov:"Choose governorate",deliveryTo:"Deliver to",
+    zone_cairo:"Cairo, Giza & Alexandria",zone_delta:"Delta & Canal",zone_upper:"Upper Egypt & other governorates",
+    custName:"Name",custArea:"Area",custPhone:"Mobile number",custPay:"Payment method",
+    pay_cash:"Cash on delivery",pay_instapay:"InstaPay",pay_wallet:"Mobile wallet",
+    btn_chat:"1. Send to WhatsApp",btn_send:"2. Send my pictures",btn_copy:"Copy my order",
+    sendHint:"Step 1 sends your order details to our chat. Step 2 sends your layout picture and the photos you uploaded: choose WhatsApp, then our chat (it shows in your recent chats after step 1). Your pictures stay on your phone until you choose to send them.",
+    copied:"Copied. Paste it in your message to us.",copy_fail:"Could not copy automatically. Please take a screenshot instead.",
+    preparing:"Preparing your pictures…",shared:"Thank you! Your design was shared.",cancelled:"Cancelled.",
+    tap_again:"Tap again to send",tap_again_msg:"Almost done. Tap the button once more to choose WhatsApp.",
+    prep_fail:"Could not prepare the pictures. Please take a screenshot instead.",
+    fallback:"Your phone can’t send pictures directly from this page, so we saved them to your device. Please open WhatsApp and send the saved pictures in our chat.",
+    need_photos:"Please add a photo to every frame first.",
+    missing_prefix:function(l){return "Still missing: "+l},
+    miss_count:"number of frames",
+    miss_photos:function(n,l){return (n===1?"photo for frame ":"photos for frames ")+l},
+    miss_name:"your name",miss_area:"your area",miss_phone:"a valid mobile number (11 digits starting with 01)",miss_gov:"governorate",
+    multi_ok:function(n){return n+(n===1?" photo added.":" photos added.")},
+    multi_ignored:function(n){return "Up to "+n+" frames. The extra photos were ignored."},
+    err_image:"Please choose an image file (JPG or PNG).",err_open:"That photo could not be opened. Try a JPG or PNG.",
+    fit_none_t:"No frames yet",fit_none_m:"Choose how many frames you want.",
+    fit_pbig_t:"Too big for this photo",
+    fit_pbig_m:function(w,h,W,H){return "Your gallery is "+w+" × "+h+" cm, but the photo shows only about "+W+" × "+H+" cm of wall. If the scale looks wrong, tap “Set real size”."},
+    fit_pok_t:"Drag the frames into place",
+    fit_pok_m:function(w,h,W){return "Your gallery is "+w+" × "+h+" cm. The photo shows about "+W+" cm of wall across."},
+    where_wall:"on this wall",where_above:function(l){return "above the "+l},
+    fit_big_t:"Too big for this space",
+    fit_big_m:function(w,h,a,where){return "Your gallery is "+w+" × "+h+" cm, but only about "+a+" cm of height is free "+where+". Try smaller sizes, a row layout, or another room."},
+    fit_wide_t:function(l){return "Wider than the "+l},
+    fit_wide_m:function(w,l,fw){return "Your gallery is "+w+" cm wide and the "+l+" is about "+fw+" cm. Galleries usually look balanced at around two thirds to three quarters of the furniture’s width."},
+    fit_small_t:"Small for this wall",
+    fit_small_m:function(w,p,l){return "Your gallery is "+w+" cm wide, about "+p+"% of the "+l+". Add a frame or pick bigger sizes for more presence."},
+    fit_good_t:"Good proportions",
+    fit_good_m:function(w,h,p,l){return "Your gallery is "+w+" × "+h+" cm, about "+p+"% of the "+l+"’s width."},
+    cal_1:"Tap one end of something you know the size of (for example, the width of your sofa).",
+    cal_2:"Now tap the other end.",cal_3:"How long is it in real life? Type the length in centimetres.",
+    cal_label:"Real length (cm)",cal_apply:"Apply",cal_cancel:"Cancel",
+    cal_err_len:"Type a length in centimetres, for example 200.",
+    cal_err_close:"The two points are too close. Cancel and tap them again, further apart.",
+    tapHint:"Tap an empty frame on the wall to add your photo.",tapTitle:"Tap to add your photo",
+    step1:"Design",step2:"Your order",goOrder:"Next: your order details",goDesign:"Back to design",
+    miss_ready:"Everything is ready. You can send your order.",
+    bar_missing:function(l){return "Missing: "+l},bar_ready:"Ready to send ✓",barContinue:"Continue",
+    rc_title:function(n){return "My order · "+n+" frame"+(n===1?"":"s")},
+    rc_land:"(landscape)",rc_nophoto:"photo missing",
+    rc_color:"Frame colour",rc_front:"Front",rc_glass:"Glass front",
+    rc_sub:"Subtotal",rc_disc:"Discount",rc_delivery:"Delivery",rc_gov_pending:"(governorate not chosen)",rc_total:"Total",
+    rc_name:"Name",rc_area:"Area",rc_phone:"Phone",rc_pay:"Payment",
+    rc_f_acrylic:"Acrylic",rc_f_glass:"Glass",
+    sep:", "
+  },
+  ar:{
+    docTitle:"صمّم تشكيلة براويزك",
+    title:"صمّم تشكيلة براويزك",
+    intro:"اختار عدد البراويز والمقاسات، وشوفها فوق الكنبة أو التليفزيون أو السرير بالمقاس الحقيقي. أو جرّبها على صورة حيطتك.",
+    cm:"سم",free:"مجاني",
+    room:"المكان",
+    scene_sofa:"فوق الكنبة",scene_tv:"فوق التليفزيون",scene_bed:"فوق السرير",scene_desk:"فوق الكمبيوتر",scene_wall:"حيطة فاضية",
+    label_sofa:"الكنبة",label_tv:"وحدة التليفزيون",label_bed:"السرير",label_desk:"المكتب",label_wall:"الحيطة",
+    wallPick:"استخدم صورة حيطتي",calibStart:"حدّد المقاس الحقيقي",wallClear:"شيل الصورة",
+    photoHint:"البراويز هتظهر بالمقاس الحقيقي بعد ما تحدد مقاس حاجة معروفة في الصورة. صوّر الحيطة من قدّامها مباشرة عشان تطلع أحسن.",
+    wallColour:"لون الحيطة",
+    wall_plaster:"كريمي",wall_sage:"أخضر هادي",wall_clay:"طيني",wall_ink:"كحلي رمادي",wall_white:"أبيض",wall_beige:"بيج",wall_black:"أسود",
+    yourFrames:"براويزك",howMany:"عايز كام برواز؟",
+    multiBtn:"ارفع كل صورك مرة واحدة",multiHint:"اختار كذا صورة، وهتتوزع على البراويز بالترتيب.",
+    startSet:"أو ابدأ بتشكيلة جاهزة",
+    preset_trio:"ثلاثي كلاسيك",preset_centre:"قطعة في النص",preset_pair:"اتنين",preset_gallery:"حيطة معرض",preset_six:"شبكة من 6",
+    sizeEach:"مقاس كل برواز",
+    sizesHint:"المقاس هو مقاس الصورة. البرواز بيزوّد حوالي 2.5 سم من كل ناحية.",
+    emptyList:"لسه مفيش براويز. اختار العدد من فوق.",
+    frameTitle:function(i,w,h){return "برواز "+i+" · "+w+" × "+h+" سم"},
+    yourPhoto:"صورتك",samplePic:"صورة تجريبية",
+    q_sharp:"واضحة",q_soft:"متوسطة",q_low:"ضعيفة",q_add:"ضيف صورة",
+    dpiTip:function(d){return d+" DPI على المقاس ده"},
+    b_landscape:"اقلبه عرضي",b_portrait:"اقلبه طولي",b_upload:"ارفع صورتك",b_change:"غيّر الصورة",b_remove:"احذف",
+    a_reorder:function(i){return "ترتيب البرواز "+i+": اسحبه، أو استخدم أسهم فوق وتحت"},
+    a_dragTitle:"اسحب لتغيير الترتيب",
+    a_up:function(i){return "حرّك البرواز "+i+" لفوق"},a_down:function(i){return "حرّك البرواز "+i+" لتحت"},
+    a_rotate:function(i){return "اقلب البرواز "+i},
+    a_upload:function(i){return "ارفع صورتك للبرواز "+i},a_change:function(i){return "غيّر صورة البرواز "+i},
+    a_remove:function(i){return "احذف البرواز "+i},a_size:function(i){return "مقاس البرواز "+i},
+    a_frame:function(i,w,h){return "البرواز "+i+"، "+w+" في "+h+" سم. اسحبه أو استخدم الأسهم لتحريكه."},
+    sizeOpt:function(w,h,p){return w+" × "+h+" سم · "+p+" جنيه"},
+    frameStyle:"شكل البرواز",frameColour:"لون البرواز",fc_black:"أسود",fc_white:"أبيض",fc_wood:"خشبي",
+    front:"الواجهة",front_acrylic:"أكريليك (الأفضل)",front_glass:"زجاج (+10 جنيه لكل برواز)",
+    note_acrylic:"الأكريليك أخف وأأمن، وسعره مشمول.",
+    note_glass:"الزجاج: +10 جنيه لكل برواز. أتقل وممكن ينكسر.",
+    hookHint:"كل برواز معاه مسمار لاصق للحيطة، تعلّقه من غير ما تعمل أي خرم.",
+    arrangement:"الترتيب",layout_row:"صف",layout_centered:"في النص",layout_grid:"شبكة",layout_column:"عمود",
+    gapLabel:function(n){return "المسافة بين البراويز: "+n+" سم"},
+    arrHint:"اسحب أي برواز على الحيطة لتظبيطه. وعشان تبدّل برواز مع التاني، سيبه فوقه، أو استخدم المقبض المنقّط وأزرار ↑ ↓ في القايمة. في ترتيب «في النص» الترتيب بيمشي حسب المقاس. تغيير الترتيب أو المكان بيرجّع المواضع.",
+    yourSet:"طلبك",total:"الإجمالي",
+    promo_0:function(a,b,c){return "اشترِ "+a+" براويز أو أكتر وخد توصيل مجاني. و"+b+" براويز أو أكتر توصيل مجاني + خصم "+c+" جنيه."},
+    promo_lt:function(n){return "ضيف "+arFrames(n)+" كمان وخد توصيل مجاني."},
+    promo_mid:function(n,c){return "التوصيل بقى مجاني. ضيف "+arFrames(n)+" كمان وخد خصم "+c+" جنيه."},
+    promo_done:function(c){return "التوصيل مجاني + خصم "+c+" جنيه اتطبّق."},
+    line_glass:function(n,fee){return "واجهة زجاج ("+n+" × "+fee+" جنيه)"},
+    line_sub:"المجموع",line_disc:function(n){return "خصم التشكيلة ("+n+"+ براويز)"},line_delivery:"التوصيل",
+    pick_gov:"اختر المحافظة",deliveryTo:"التوصيل إلى",
+    zone_cairo:"القاهرة والجيزة والإسكندرية",zone_delta:"الوجه البحري",zone_upper:"الصعيد وباقي المحافظات",
+    custName:"الاسم",custArea:"المنطقة",custPhone:"رقم الموبايل",custPay:"طريقة الدفع",
+    pay_cash:"كاش عند الاستلام",pay_instapay:"إنستا باي",pay_wallet:"محفظة إلكترونية",
+    btn_chat:"1. ابعت على واتساب",btn_send:"2. ابعت صورك",btn_copy:"انسخ طلبي",
+    sendHint:"الخطوة 1 بتبعت تفاصيل طلبك على الشات. الخطوة 2 بتبعت صورة التشكيلة والصور اللي رفعتها: اختار واتساب وبعدين شات المحل (هيظهر في آخر المحادثات بعد الخطوة 1). صورك بتفضل على موبايلك لحد ما تبعتها بنفسك.",
+    copied:"اتنسخ. الصقه في رسالتك لينا.",copy_fail:"ماقدرناش ننسخ تلقائي. صوّر الشاشة بدل كده.",
+    preparing:"بنجهّز صورك…",shared:"شكراً! اتبعتت تشكيلتك.",cancelled:"اتلغى.",
+    tap_again:"اضغط تاني للإرسال",tap_again_msg:"قربنا. اضغط الزرار مرة تانية واختار واتساب.",
+    prep_fail:"ماقدرناش نجهّز الصور. صوّر الشاشة بدل كده.",
+    fallback:"موبايلك مش بيدعم إرسال الصور من الصفحة، فحفظناها على جهازك. افتح واتساب وابعت الصور المحفوظة في شات المحل.",
+    need_photos:"ارفع صورة لكل برواز الأول.",
+    missing_prefix:function(l){return "لسه ناقص: "+l},
+    miss_count:"عدد البراويز",
+    miss_photos:function(n,l){return (n===1?"صورة للبرواز ":"صور للبراويز ")+l},
+    miss_name:"الاسم",miss_area:"المنطقة",miss_phone:"رقم موبايل صحيح (11 رقم بيبدأ بـ 01)",miss_gov:"المحافظة",
+    multi_ok:function(n){return n===1?"اتضافت صورة واحدة.":"اتضافت "+n+" صور."},
+    multi_ignored:function(n){return "الحد الأقصى "+n+" براويز. الصور الزيادة اتتجاهلت."},
+    err_image:"اختار ملف صورة (JPG أو PNG).",err_open:"ماقدرناش نفتح الصورة. جرّب JPG أو PNG.",
+    fit_none_t:"لسه مفيش براويز",fit_none_m:"اختار عدد البراويز.",
+    fit_pbig_t:"كبيرة على الصورة دي",
+    fit_pbig_m:function(w,h,W,H){return "تشكيلتك "+w+" × "+h+" سم، لكن الصورة بتعرض حوالي "+W+" × "+H+" سم من الحيطة بس. لو المقاس شكله غلط اضغط «حدّد المقاس الحقيقي»."},
+    fit_pok_t:"حرّك البراويز في مكانها",
+    fit_pok_m:function(w,h,W){return "تشكيلتك "+w+" × "+h+" سم. الصورة بتعرض حوالي "+W+" سم عرض الحيطة."},
+    where_wall:"على الحيطة دي",where_above:function(l){return "فوق "+l},
+    fit_big_t:"كبيرة على المكان ده",
+    fit_big_m:function(w,h,a,where){return "تشكيلتك "+w+" × "+h+" سم، بس المساحة الفاضية في الارتفاع حوالي "+a+" سم "+where+". جرّب مقاسات أصغر أو ترتيب في صف أو مكان تاني."},
+    fit_wide_t:function(l){return "أعرض من "+l},
+    fit_wide_m:function(w,l,fw){return "تشكيلتك عرضها "+w+" سم و"+l+" حوالي "+fw+" سم. التشكيلة بتبان متوازنة غالباً لما عرضها يبقى من تلتين لتلات تربع عرض الأثاث."},
+    fit_small_t:"صغيرة على الحيطة دي",
+    fit_small_m:function(w,p,l){return "تشكيلتك عرضها "+w+" سم، حوالي "+p+"% من عرض "+l+". ضيف برواز أو اختار مقاسات أكبر."},
+    fit_good_t:"تناسب حلو",
+    fit_good_m:function(w,h,p,l){return "تشكيلتك "+w+" × "+h+" سم، حوالي "+p+"% من عرض "+l+"."},
+    cal_1:"اضغط على طرف حاجة عارف مقاسها (مثلاً عرض الكنبة).",
+    cal_2:"دلوقتي اضغط على الطرف التاني.",cal_3:"طولها الحقيقي كام؟ اكتبه بالسنتيمتر.",
+    cal_label:"الطول الحقيقي (سم)",cal_apply:"تطبيق",cal_cancel:"إلغاء",
+    cal_err_len:"اكتب الطول بالسنتيمتر، مثلاً 200.",
+    cal_err_close:"النقطتين قريبين أوي. الغي وحدّدهم تاني بعيد عن بعض.",
+    tapHint:"اضغط على أي برواز فاضي على الحيطة عشان تضيف صورتك.",tapTitle:"اضغط لإضافة صورتك",
+    step1:"التصميم",step2:"بيانات الطلب",goOrder:"التالي: بيانات الطلب",goDesign:"رجوع للتصميم",
+    miss_ready:"كله جاهز. تقدر تبعت طلبك.",
+    bar_missing:function(l){return "ناقص: "+l},bar_ready:"جاهز للإرسال ✓",barContinue:"كمّل",
+    rc_title:function(n){return "طلبي · "+arFrames(n)},
+    rc_land:"(عرضي)",rc_nophoto:"الصورة ناقصة",
+    rc_color:"لون البرواز",rc_front:"الواجهة",rc_glass:"واجهة الزجاج",
+    rc_sub:"المجموع",rc_disc:"الخصم",rc_delivery:"التوصيل",rc_gov_pending:"(المحافظة لسه ماتحددتش)",rc_total:"الإجمالي",
+    rc_name:"الاسم",rc_area:"المنطقة",rc_phone:"الموبايل",rc_pay:"الدفع",
+    rc_f_acrylic:"أكريليك",rc_f_glass:"زجاج",
+    sep:"، "
+  }};
+  var LANG="ar";
+  try{var sv=localStorage.getItem("lang");if(sv==="en"||sv==="ar")LANG=sv}catch(e){}
+  function t(key){
+    var a=[].slice.call(arguments,1),v=I18N[LANG][key];
+    if(v===undefined)v=I18N.en[key];
+    if(typeof v==="function")return v.apply(null,a);
+    return v===undefined?key:v;
+  }
+  function money(n){return LANG==="ar"?fmt(n)+" جنيه":"EGP "+fmt(n)}
+  function sizeText(w,h){return w+" × "+h+" "+t("cm")}
+
+
+  var st={cust:{name:"",area:"",phone:"",pay:"cash"},fc:0,front:"acrylic",scene:0,photo:false,wall:0,layout:"row",gap:6,frames:[],nextId:1,nextArt:0,
+    photoUrl:null,photoAR:.75,photoWallW:300,calib:{on:false,pts:[]},fee:null,govName:"",spare:[],step:1};
   var arts=[];
 
   /* ---------- sample artworks (900 x 1200, treated as 1800 x 2400) ---------- */
@@ -312,7 +608,9 @@ a.btn{text-decoration:none}
   }
   arts.push(clubArt(CLUBS[3]));
 
+
   /* ---------- helpers ---------- */
+  function say(s){$("status").textContent=s}
   function scene(){return SCENES[st.scene]}
   function dimsOf(f){var s=SIZES[f.size];return f.portrait?{w:s.w,h:s.h}:{w:s.h,h:s.w}}
   function stageDims(){
@@ -321,9 +619,9 @@ a.btn{text-decoration:none}
   }
   function quality(f){
     var d=dimsOf(f),a=d.w/d.h,cw0=Math.min(f.iw,f.ih*a),dpi=cw0/(d.w/2.54);
-    if(dpi>=150)return {cls:"good",txt:"Sharp",dpi:dpi};
-    if(dpi>=100)return {cls:"ok",txt:"Soft",dpi:dpi};
-    return {cls:"low",txt:"Low",dpi:dpi};
+    if(dpi>=150)return {cls:"good",k:"q_sharp",dpi:dpi};
+    if(dpi>=100)return {cls:"ok",k:"q_soft",dpi:dpi};
+    return {cls:"low",k:"q_low",dpi:dpi};
   }
   function drawArt(f,cv){
     var d=dimsOf(f),a=d.w/d.h;
@@ -340,11 +638,55 @@ a.btn{text-decoration:none}
     return true;
   }
   function resetOffsets(){st.frames.forEach(function(f){f.dx=0;f.dy=0})}
+  function swapFrames(a,b){var t=st.frames[a];st.frames[a]=st.frames[b];st.frames[b]=t;resetOffsets();renderAll()}
+  function moveFrame(i,dir){var j=i+dir;if(j<0||j>=st.frames.length)return;swapFrames(i,j)}
+  function applyOrder(ids){
+    var map={};st.frames.forEach(function(f){map[f.id]=f});
+    var next=ids.map(function(id){return map[id]}).filter(Boolean);
+    if(next.length!==st.frames.length)return;
+    var same=next.every(function(f,k){return f===st.frames[k]});
+    if(same)return;
+    st.frames=next;resetOffsets();renderAll();
+  }
+  function wireHandle(hd,li,ul,i){
+    var dragging=false;
+    hd.addEventListener("pointerdown",function(e){dragging=true;try{hd.setPointerCapture(e.pointerId)}catch(x){}li.classList.add("dragging");e.preventDefault()});
+    hd.addEventListener("pointermove",function(e){
+      if(!dragging)return;
+      var prev=li.previousElementSibling,next=li.nextElementSibling,r;
+      if(prev){r=prev.getBoundingClientRect();if(e.clientY<r.top+r.height/2){ul.insertBefore(prev,li.nextSibling);return}}
+      if(next){r=next.getBoundingClientRect();if(e.clientY>r.top+r.height/2){ul.insertBefore(next,li)}}
+    });
+    function end(){
+      if(!dragging)return;dragging=false;li.classList.remove("dragging");
+      var ids=[].map.call(ul.querySelectorAll(".item"),function(x){return parseInt(x.dataset.fid,10)});
+      applyOrder(ids);
+    }
+    hd.addEventListener("pointerup",end);
+    hd.addEventListener("pointercancel",end);
+    hd.addEventListener("keydown",function(e){
+      if(e.key==="ArrowUp"){e.preventDefault();moveFrame(i,-1)}
+      else if(e.key==="ArrowDown"){e.preventDefault();moveFrame(i,1)}
+    });
+  }
+
+  /* uploaded photos are never thrown away when the customer changes the number of frames or the set */
+  function stash(f){if(f.file)st.spare.push({src:f.src,iw:f.iw,ih:f.ih,sc:f.sc,name:f.name,file:f.file})}
+  function restoreInto(f){var s=st.spare.pop();if(!s)return false;f.src=s.src;f.iw=s.iw;f.ih=s.ih;f.sc=s.sc;f.name=s.name;f.file=s.file;return true}
+  function addFrameSmart(size){if(!addFrame(size))return false;restoreInto(st.frames[st.frames.length-1]);return true}
   function setCount(n){
-    while(st.frames.length>n)st.frames.pop();
+    while(st.frames.length>n)stash(st.frames.pop());
     var last=st.frames.length?st.frames[st.frames.length-1].size:1;
-    while(st.frames.length<n)addFrame(last);
+    while(st.frames.length<n)addFrameSmart(last);
     resetOffsets();renderAll();
+  }
+  function applyPreset(p){
+    var keep=st.frames.slice(0,p.sizes.length),drop=st.frames.slice(p.sizes.length);
+    for(var k=drop.length-1;k>=0;k--)stash(drop[k]);
+    st.frames=keep;
+    keep.forEach(function(f,i){f.size=p.sizes[i]});
+    while(st.frames.length<p.sizes.length){if(!addFrameSmart(p.sizes[st.frames.length]))break}
+    st.layout=p.layout;resetOffsets();buildControls();renderAll();
   }
 
   /* ---------- layout (cm) ---------- */
@@ -381,6 +723,7 @@ a.btn{text-decoration:none}
     }
     return {pos:pos,w:bw,h:bh};
   }
+
 
   /* ---------- scene drawing ---------- */
   function sceneSVG(id){
@@ -458,6 +801,7 @@ a.btn{text-decoration:none}
     return defs+base+m;
   }
 
+
   /* ---------- stage ---------- */
   var nodes=[];
   function renderStage(){
@@ -477,16 +821,22 @@ a.btn{text-decoration:none}
     if(st.photo)top=Math.max(0,D.H*0.42-L.h/2);
     else{var sc0=scene();top=sc0.center?sc0.center-L.h/2:(sc0.top-GAP_ABOVE)-L.h}
     L.pos.forEach(function(p){
-      var f=p.it.f,d=dimsOf(f);
-      var el=document.createElement("div");el.className="frame "+FRAME_COLORS[st.fc].cls;el.tabIndex=0;el.setAttribute("role","img");
-      el.setAttribute("aria-label","Frame "+(st.frames.indexOf(f)+1)+", "+d.w+" by "+d.h+" centimetres. Drag it, or use the arrow keys, to move it.");
+      var f=p.it.f,d=dimsOf(f),idx=st.frames.indexOf(f)+1;
+      var el=document.createElement("div");el.className="frame "+FRAME_COLORS[st.fc].cls+(f.file?"":" nophoto");el.tabIndex=0;el.setAttribute("role","img");
+      el.setAttribute("aria-label",t("a_frame",idx,d.w,d.h)+(f.file?"":" "+t("tapTitle")));
+      if(!f.file)el.title=t("tapTitle");
       el.style.width=(p.it.w*k)+"px";el.style.height=(p.it.h*k)+"px";el.style.padding=(FB*k)+"px";
       var wrap=document.createElement("div");wrap.className="artwrap";
       var cv=document.createElement("canvas");
       cv.style.width=(d.w*k)+"px";cv.style.height=(d.h*k)+"px";
       cv.width=Math.max(10,Math.min(Math.round(d.w*k*DPR),520));
       cv.height=Math.max(10,Math.round(cv.width*d.h/d.w));
-      wrap.appendChild(cv);el.appendChild(wrap);stage.appendChild(el);
+      wrap.appendChild(cv);
+      if(!f.file){
+        var bd=document.createElement("div"),bs=Math.max(18,Math.min(38,d.w*k*0.45));
+        bd.className="addbadge";bd.style.width=bs+"px";bd.style.height=bs+"px";bd.style.fontSize=(bs*0.75)+"px";bd.textContent="+";wrap.appendChild(bd);
+      }
+      el.appendChild(wrap);stage.appendChild(el);
       drawArt(f,cv);
       var node={el:el,f:f,bx:left+p.x,by:top+p.y,w:p.it.w,h:p.it.h};
       nodes.push(node);place(node,k);wire(node);
@@ -501,47 +851,64 @@ a.btn{text-decoration:none}
     n.el.style.left=(x*k)+"px";n.el.style.top=(y*k)+"px";
   }
   function wire(n){
-    var drag=null,el=n.el;
+    var drag=null,el=n.el,dx0=0,dy0=0,movedPx=false;
     function kk(){return $("stage").clientWidth/stageDims().W}
-    el.addEventListener("pointerdown",function(e){drag={x:e.clientX,y:e.clientY,dx:n.f.dx,dy:n.f.dy};el.setPointerCapture(e.pointerId);el.style.zIndex=3});
+    el.addEventListener("pointerdown",function(e){drag={x:e.clientX,y:e.clientY,dx:n.f.dx,dy:n.f.dy};movedPx=false;try{el.setPointerCapture(e.pointerId)}catch(x){}el.style.zIndex=3});
     el.addEventListener("pointermove",function(e){
       if(!drag)return;var k=kk();
+      if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6)movedPx=true;
       n.f.dx=drag.dx+(e.clientX-drag.x)/k;n.f.dy=drag.dy+(e.clientY-drag.y)/k;place(n,k);invalidate();
     });
-    function end(){drag=null;el.style.zIndex=""}
-    el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
+    function cancel(){drag=null;el.style.zIndex=""}
+    function end(){
+      var moved=drag&&(Math.abs(n.f.dx-drag.dx)+Math.abs(n.f.dy-drag.dy))>0.5;
+      cancel();
+      if(!moved)return;
+      var cx=parseFloat(el.style.left)+parseFloat(el.style.width)/2,cy=parseFloat(el.style.top)+parseFloat(el.style.height)/2;
+      for(var m=0;m<nodes.length;m++){
+        var o=nodes[m];if(o===n)continue;
+        var l=parseFloat(o.el.style.left),tp=parseFloat(o.el.style.top),w=parseFloat(o.el.style.width),h=parseFloat(o.el.style.height);
+        if(cx>l&&cx<l+w&&cy>tp&&cy<tp+h){swapFrames(st.frames.indexOf(n.f),st.frames.indexOf(o.f));return}
+      }
+    }
+    el.addEventListener("pointerup",end);el.addEventListener("pointercancel",cancel);
+    /* a plain tap on an empty frame opens the photo picker */
+    el.addEventListener("click",function(){
+      if(movedPx){movedPx=false;return}
+      if(st.calib.on)return;
+      if(!n.f.file)pickPhoto(n.f);
+    });
     el.addEventListener("keydown",function(e){
+      if((e.key==="Enter"||e.key===" ")&&!n.f.file){e.preventDefault();pickPhoto(n.f);return}
       var v={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
       if(!v)return;e.preventDefault();var s=e.shiftKey?5:1;
       n.f.dx+=v[0]*s;n.f.dy+=v[1]*s;place(n,kk());invalidate();
     });
   }
   function fitMessage(L,D){
-    var box=$("fit"),T=$("fitT"),M=$("fitM"),cls,t,m;
-    if(!st.frames.length){cls="ok";t="No frames yet";m="Choose how many frames you want."}
+    var box=$("fit"),T=$("fitT"),M=$("fitM"),cls,tt,m;
+    if(!st.frames.length){cls="ok";tt=t("fit_none_t");m=t("fit_none_m")}
     else if(st.photo){
-      if(L.w>D.W-4||L.h>D.H-4){cls="low";t="Too big for this photo";m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm, but the photo shows only about "+fmt(D.W)+" × "+fmt(D.H)+" cm of wall. If the scale looks wrong, tap “Set real size”."}
-      else{cls="good";t="Drag the frames into place";m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm. The photo shows about "+fmt(D.W)+" cm of wall across."}
+      if(L.w>D.W-4||L.h>D.H-4){cls="low";tt=t("fit_pbig_t");m=t("fit_pbig_m",fmt(L.w),fmt(L.h),fmt(D.W),fmt(D.H))}
+      else{cls="good";tt=t("fit_pok_t");m=t("fit_pok_m",fmt(L.w),fmt(L.h),fmt(D.W))}
     }else{
-      var sc=scene(),availH=sc.availH||(sc.top-GAP_ABOVE-TOP_MARGIN),where=(sc.id==="wall"?"on this wall":"above the "+sc.label);
+      var sc=scene(),lab=t("label_"+sc.id),availH=sc.availH||(sc.top-GAP_ABOVE-TOP_MARGIN),where=(sc.id==="wall"?t("where_wall"):t("where_above",lab));
       if(L.h>availH+0.5||L.w>W0-20){
-        cls="low";t="Too big for this space";
-        m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm, but only about "+fmt(availH)+" cm of height is free "+where+". Try smaller sizes, a row layout, or another room.";
+        cls="low";tt=t("fit_big_t");m=t("fit_big_m",fmt(L.w),fmt(L.h),fmt(availH),where);
       }else{
         var r=L.w/sc.fw;
-        if(r>1.05){cls="ok";t="Wider than the "+sc.label;m="Your gallery is "+fmt(L.w)+" cm wide and the "+sc.label+" is about "+sc.fw+" cm. Galleries usually look balanced at around two thirds to three quarters of the furniture’s width."}
-        else if(r<0.4){cls="ok";t="Small for this wall";m="Your gallery is "+fmt(L.w)+" cm wide, about "+Math.round(r*100)+"% of the "+sc.label+". Add a frame or pick bigger sizes for more presence."}
-        else{cls="good";t="Good proportions";m="Your gallery is "+fmt(L.w)+" × "+fmt(L.h)+" cm, about "+Math.round(r*100)+"% of the "+sc.label+"’s width."}
+        if(r>1.05){cls="ok";tt=t("fit_wide_t",lab);m=t("fit_wide_m",fmt(L.w),lab,sc.fw)}
+        else if(r<0.4){cls="ok";tt=t("fit_small_t");m=t("fit_small_m",fmt(L.w),Math.round(r*100),lab)}
+        else{cls="good";tt=t("fit_good_t");m=t("fit_good_m",fmt(L.w),fmt(L.h),Math.round(r*100),lab)}
       }
     }
-    box.className="fit "+cls;T.textContent=t;M.textContent=m;
+    box.className="fit "+cls;T.textContent=tt;M.textContent=m;
   }
 
   /* ---------- wall photo + calibration ---------- */
-  function say(t){$("status").textContent=t}
   function loadWall(file){
     if(!file)return;
-    if(!/^image\//.test(file.type)){say("Please choose an image file (JPG or PNG).");return}
+    if(!/^image\//.test(file.type)){say(t("err_image"));return}
     var url=URL.createObjectURL(file),im=new Image();
     im.onload=function(){
       var mx=1600,s=Math.min(1,mx/Math.max(im.naturalWidth,im.naturalHeight));
@@ -557,7 +924,7 @@ a.btn{text-decoration:none}
       if(c.toBlob){c.toBlob(function(b){if(b)done(URL.createObjectURL(b),true);else done(url,false)},"image/jpeg",.88)}
       else done(url,false);
     };
-    im.onerror=function(){say("That photo could not be opened. Try a JPG or PNG.")};
+    im.onerror=function(){say(t("err_open"))};
     im.src=url;
   }
   function removeWall(){
@@ -570,8 +937,7 @@ a.btn{text-decoration:none}
     $("stage").classList.toggle("calibrating",c.on);
     if(!c.on)return;
     $("calibRow").hidden=c.pts.length<2;
-    $("calibMsg").textContent=c.pts.length===0?"Tap one end of something you know the size of (for example, the width of your sofa).":
-      c.pts.length===1?"Now tap the other end.":"How long is it in real life? Type the length in centimetres.";
+    $("calibMsg").textContent=c.pts.length===0?t("cal_1"):(c.pts.length===1?t("cal_2"):t("cal_3"));
   }
   function drawCalib(){
     var s=$("calibSvg"),c=st.calib,h="";
@@ -591,9 +957,9 @@ a.btn{text-decoration:none}
   $("calibCancel").addEventListener("click",function(){st.calib={on:false,pts:[]};drawCalib()});
   $("calibApply").addEventListener("click",function(){
     var cm=parseFloat($("calibCm").value),p=st.calib.pts;
-    if(!(cm>0)||p.length<2){$("calibMsg").textContent="Type a length in centimetres, for example 200.";return}
+    if(!(cm>0)||p.length<2){$("calibMsg").textContent=t("cal_err_len");return}
     var d=Math.hypot(p[1].u-p[0].u,(p[1].v-p[0].v)*st.photoAR);
-    if(d<0.02){$("calibMsg").textContent="The two points are too close. Cancel and tap them again, further apart.";return}
+    if(d<0.02){$("calibMsg").textContent=t("cal_err_close");return}
     st.photoWallW=Math.min(1500,Math.max(60,cm/d));
     st.calib={on:false,pts:[]};resetOffsets();renderAll();
   });
@@ -607,28 +973,36 @@ a.btn{text-decoration:none}
     var act=document.activeElement,keep=null;
     if(act&&act.dataset&&act.dataset.id)keep={id:act.dataset.id,role:act.dataset.role};
     var ul=$("list");ul.innerHTML="";
-    if(!st.frames.length){var li=document.createElement("li");li.className="hint";li.textContent="No frames yet. Choose how many frames you want above.";ul.appendChild(li)}
+    if(!st.frames.length){var li0=document.createElement("li");li0.className="hint";li0.textContent=t("emptyList");ul.appendChild(li0)}
     st.frames.forEach(function(f,i){
-      var d=dimsOf(f),q=quality(f),li=document.createElement("li");li.className="item";
+      var d=dimsOf(f),q=quality(f),li=document.createElement("li");li.className="item";li.dataset.fid=f.id;
       var top=document.createElement("div");top.className="itop";
       var th=document.createElement("canvas");th.className="thumb";th.width=88;th.height=116;
       var tg=th.getContext("2d");var a=th.width/th.height,cw0=Math.min(f.iw,f.ih*a),ch0=cw0/a;
       var tsc=f.sc||1;tg.drawImage(f.src,(f.iw-cw0)/2*tsc,(f.ih-ch0)/2*tsc,cw0*tsc,ch0*tsc,0,0,th.width,th.height);
       var tt=document.createElement("div");tt.className="ititle";
-      var b=document.createElement("b");b.textContent="Frame "+(i+1)+" · "+d.w+" × "+d.h+" cm";
-      var sp=document.createElement("span");sp.textContent="EGP "+fmt(SIZES[f.size].price)+" · "+f.name;
+      var b=document.createElement("b");b.textContent=t("frameTitle",i+1,d.w,d.h);
+      var sp=document.createElement("span");sp.textContent=money(SIZES[f.size].price)+" · "+(f.file?t("yourPhoto"):t("samplePic"));
       tt.appendChild(b);tt.appendChild(sp);
-      var tag=document.createElement("span");tag.className="tag "+q.cls;tag.textContent=q.txt;tag.title=fmt(q.dpi)+" DPI at this size";
-      top.appendChild(th);top.appendChild(tt);top.appendChild(tag);
+      var tag=document.createElement("span");
+      if(f.file){tag.className="tag "+q.cls;tag.textContent=t(q.k);tag.title=t("dpiTip",fmt(q.dpi))}else{tag.className="tag ok";tag.textContent=t("q_add")}
+      var hd=document.createElement("button");hd.type="button";hd.className="handle";hd.dataset.id=f.id;hd.dataset.role="handle";
+      hd.setAttribute("aria-label",t("a_reorder",i+1));hd.title=t("a_dragTitle");
+      hd.innerHTML='<svg width="14" height="22" viewBox="0 0 14 22" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.8"/><circle cx="10" cy="4" r="1.8"/><circle cx="4" cy="11" r="1.8"/><circle cx="10" cy="11" r="1.8"/><circle cx="4" cy="18" r="1.8"/><circle cx="10" cy="18" r="1.8"/></svg>';
+      wireHandle(hd,li,ul,i);
+      top.appendChild(hd);top.appendChild(th);top.appendChild(tt);top.appendChild(tag);
       var act2=document.createElement("div");act2.className="iact";
-      var sel=document.createElement("select");sel.dataset.id=f.id;sel.dataset.role="size";sel.setAttribute("aria-label","Size of frame "+(i+1));
-      SIZES.forEach(function(s,si){var o=document.createElement("option");o.value=si;o.textContent=s.w+" × "+s.h+" cm · EGP "+s.price;if(si===f.size)o.selected=true;sel.appendChild(o)});
+      var sel=document.createElement("select");sel.dataset.id=f.id;sel.dataset.role="size";sel.setAttribute("aria-label",t("a_size",i+1));
+      SIZES.forEach(function(s,si){var o=document.createElement("option");o.value=si;o.textContent=t("sizeOpt",s.w,s.h,s.price);if(si===f.size)o.selected=true;sel.appendChild(o)});
       sel.addEventListener("change",function(){f.size=parseInt(sel.value,10);resetOffsets();renderAll()});
       function btn(label,role,fn,aria){var bt=document.createElement("button");bt.type="button";bt.className="btn ghost sm";bt.textContent=label;bt.dataset.id=f.id;bt.dataset.role=role;bt.setAttribute("aria-label",aria);bt.addEventListener("click",fn);return bt}
-      var rot=btn(f.portrait?"Make landscape":"Make portrait","rot",function(){f.portrait=!f.portrait;resetOffsets();renderAll()},"Rotate frame "+(i+1));
-      var ph=btn("Change photo","photo",function(){pickPhoto(f)},"Change photo of frame "+(i+1));
-      var rm=btn("Remove","rm",function(){st.frames=st.frames.filter(function(x){return x!==f});resetOffsets();renderAll()},"Remove frame "+(i+1));
-      act2.appendChild(sel);act2.appendChild(rot);act2.appendChild(ph);act2.appendChild(rm);
+      var rot=btn(f.portrait?t("b_landscape"):t("b_portrait"),"rot",function(){f.portrait=!f.portrait;resetOffsets();renderAll()},t("a_rotate",i+1));
+      var ph=btn(f.file?t("b_change"):t("b_upload"),"photo",function(){pickPhoto(f)},f.file?t("a_change",i+1):t("a_upload",i+1));
+      if(!f.file)ph.className="btn sm";
+      var rm=btn(t("b_remove"),"rm",function(){st.frames=st.frames.filter(function(x){return x!==f});resetOffsets();renderAll()},t("a_remove",i+1));
+      var up=btn("↑","up",function(){moveFrame(i,-1)},t("a_up",i+1)),dn=btn("↓","down",function(){moveFrame(i,1)},t("a_down",i+1));
+      up.disabled=(i===0);dn.disabled=(i===st.frames.length-1);
+      act2.appendChild(sel);act2.appendChild(rot);act2.appendChild(up);act2.appendChild(dn);act2.appendChild(ph);act2.appendChild(rm);
       li.appendChild(top);li.appendChild(act2);ul.appendChild(li);
     });
     if(keep){var el=ul.querySelector('[data-id="'+keep.id+'"][data-role="'+keep.role+'"]');if(el)el.focus()}
@@ -640,28 +1014,53 @@ a.btn{text-decoration:none}
     var ship=(n===0||free||pending)?0:st.fee;
     return {n:n,base:base,glass:glass,sub:sub,disc:disc,ship:ship,free:free,pending:pending,total:Math.max(0,sub-disc)+ship};
   }
+  function normPhone(s){
+    var t=String(s||"").replace(/[٠-٩]/g,function(d){return "٠١٢٣٤٥٦٧٨٩".indexOf(d)}).replace(/[^\d+]/g,"");
+    if(t.indexOf("+20")===0)t="0"+t.slice(3);else if(t.indexOf("0020")===0)t="0"+t.slice(4);else if(/^20\d{10}$/.test(t))t="0"+t.slice(2);
+    return /^01[0125]\d{8}$/.test(t)?t:"";
+  }
+
+  function missingList(){
+    var m=[],c=st.cust,sep=t("sep");
+    if(!st.frames.length)return [t("miss_count")];
+    var np=[];st.frames.forEach(function(f,i){if(!f.file)np.push(i+1)});
+    if(np.length)m.push(t("miss_photos",np.length,np.join(sep)));
+    if(!c.name.trim())m.push(t("miss_name"));
+    if(!c.area.trim())m.push(t("miss_area"));
+    if(!normPhone(c.phone))m.push(t("miss_phone"));
+    if(st.fee===null)m.push(t("miss_gov"));
+    return m;
+  }
+  function updateBar(P){
+    $("barTotal").textContent=money(P.total);
+    var miss=missingList(),bm=$("barMsg");
+    bm.textContent=miss.length?t("bar_missing",miss.join(t("sep"))):t("bar_ready");
+    bm.className="barmsg"+(miss.length?"":" ok");
+    var mb=$("missBox");mb.textContent=miss.length?t("bar_missing",miss.join(t("sep"))):t("miss_ready");mb.className="miss"+(miss.length?"":" ok");
+    $("tapHint").hidden=!st.frames.some(function(f){return !f.file});
+  }
   function renderSummary(){
     var counts={};
     st.frames.forEach(function(f){counts[f.size]=(counts[f.size]||0)+1});
     var ul=$("lines");ul.innerHTML="";
-    function line(a,b,cls,dirAuto){var li=document.createElement("li");if(cls)li.className=cls;var x=document.createElement("span"),y=document.createElement("span");x.textContent=a;y.textContent=b;if(dirAuto){x.dir="rtl";y.dir="rtl"}li.appendChild(x);li.appendChild(y);ul.appendChild(li)}
-    Object.keys(counts).forEach(function(k){var s=SIZES[k];line(counts[k]+" × "+s.w+" × "+s.h+" cm","EGP "+fmt(counts[k]*s.price))});
+    function line(a,b,cls){var li=document.createElement("li");if(cls)li.className=cls;var x=document.createElement("span"),y=document.createElement("span");x.textContent=a;y.textContent=b;li.appendChild(x);li.appendChild(y);ul.appendChild(li)}
+    Object.keys(counts).forEach(function(k){var s=SIZES[k];line(counts[k]+" × "+sizeText(s.w,s.h),money(counts[k]*s.price))});
     var P=pricing();
     if(P.n){
-      if(P.glass)line("Glass front ("+P.n+" × EGP "+GLASS_FEE+")","EGP "+fmt(P.glass));
-      line("Subtotal","EGP "+fmt(P.sub));
-      if(P.disc)line("Set discount ("+DISC_FROM+"+ frames)","− EGP "+fmt(P.disc),"save");
-      line("التوصيل",P.free?"مجاني":(P.pending?"اختر المحافظة":P.ship+" جنيه"),P.free?"save":"",true);
+      if(P.glass)line(t("line_glass",P.n,GLASS_FEE),money(P.glass));
+      line(t("line_sub"),money(P.sub));
+      if(P.disc)line(t("line_disc",DISC_FROM),"− "+money(P.disc),"save");
+      line(t("line_delivery"),P.free?t("free"):(P.pending?t("pick_gov"):money(P.ship)),P.free?"save":"");
     }
-    $("total").textContent="EGP "+fmt(P.total);
+    $("total").textContent=money(P.total);
     var pm=$("promo"),m3=SHIP_FREE_FROM-P.n,m5=DISC_FROM-P.n,msg,done=false;
-    function fr(k){return k+" more frame"+(k===1?"":"s")}
-    if(!P.n){msg="Buy "+SHIP_FREE_FROM+" or more frames for free delivery. Buy "+DISC_FROM+" or more for free delivery and EGP "+DISC+" off."}
-    else if(P.n<SHIP_FREE_FROM){msg="Add "+fr(m3)+" to get free delivery."}
-    else if(P.n<DISC_FROM){msg="Free delivery unlocked. Add "+fr(m5)+" for EGP "+DISC+" off as well.";done=true}
-    else{msg="Free delivery and EGP "+DISC+" off applied.";done=true}
+    if(!P.n){msg=t("promo_0",SHIP_FREE_FROM,DISC_FROM,DISC)}
+    else if(P.n<SHIP_FREE_FROM){msg=t("promo_lt",m3)}
+    else if(P.n<DISC_FROM){msg=t("promo_mid",m5,DISC);done=true}
+    else{msg=t("promo_done",DISC);done=true}
     pm.textContent=msg;pm.className="promo"+(done?" done":"");
-    $("copy").disabled=!P.n;$("send").disabled=!P.n;updateChat(P.n>0);
+    $("promo2").textContent=msg;$("promo2").className="promo"+(done?" done":"");
+    $("copy").disabled=!P.n;$("send").disabled=!P.n;updateChat(P.n>0);updateBar(P);
   }
   function syncControls(){
     document.querySelectorAll("#count input").forEach(function(inp,i){inp.checked=(i+1===st.frames.length)});
@@ -672,19 +1071,40 @@ a.btn{text-decoration:none}
   }
   function renderAll(){syncControls();renderList();renderStage();renderSummary();$("status").textContent="";invalidate()}
 
-  /* ---------- per-frame photo ---------- */
+  /* ---------- photos: one frame, or many at once ---------- */
   var pending=null;
   var fileInput=document.createElement("input");fileInput.type="file";fileInput.accept="image/*";fileInput.className="sr";fileInput.tabIndex=-1;document.body.appendChild(fileInput);
+  var multiInput=document.createElement("input");multiInput.type="file";multiInput.accept="image/*";multiInput.multiple=true;multiInput.className="sr";multiInput.tabIndex=-1;document.body.appendChild(multiInput);
   function pickPhoto(f){pending=f;fileInput.click()}
+  function readImage(file){
+    return new Promise(function(res,rej){var url=URL.createObjectURL(file),im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("img"))};im.src=url});
+  }
+  function putPhoto(f,im,file){f.src=im;f.iw=im.naturalWidth;f.ih=im.naturalHeight;f.sc=1;f.name=file.name;f.file=file}
   fileInput.addEventListener("change",function(){
     var file=fileInput.files[0],f=pending;fileInput.value="";
     if(!file||!f)return;
-    if(!/^image\//.test(file.type)){say("Please choose an image file (JPG or PNG).");return}
-    var url=URL.createObjectURL(file),im=new Image();
-    im.onload=function(){f.src=im;f.iw=im.naturalWidth;f.ih=im.naturalHeight;f.sc=1;f.name=file.name;f.file=file;renderAll()};
-    im.onerror=function(){say("That file could not be opened as a picture.")};
-    im.src=url;
+    if(!/^image\//.test(file.type)){say(t("err_image"));return}
+    readImage(file).then(function(im){putPhoto(f,im,file);renderAll()},function(){say(t("err_open"))});
   });
+  $("multiBtn").addEventListener("click",function(){multiInput.click()});
+  multiInput.addEventListener("change",function(){var fl=[].slice.call(multiInput.files);multiInput.value="";addPhotos(fl)});
+  function addPhotos(files){
+    files=files.filter(function(f){return /^image\//.test(f.type)});
+    if(!files.length){say(t("err_image"));return}
+    var targets=[];st.frames.forEach(function(f){if(!f.file)targets.push(f)});
+    var extra=files.length-targets.length,ignored=0;
+    if(extra>0){
+      var last=st.frames.length?st.frames[st.frames.length-1].size:1;
+      while(extra>0&&st.frames.length<MAX){addFrame(last);targets.push(st.frames[st.frames.length-1]);extra--}
+      ignored=extra;
+    }
+    var n=Math.min(files.length,targets.length);
+    Promise.all(files.slice(0,n).map(readImage)).then(function(ims){
+      ims.forEach(function(im,k){putPhoto(targets[k],im,files[k])});
+      resetOffsets();renderAll();
+      say(ignored>0?t("multi_ignored",MAX):t("multi_ok",n));
+    },function(){say(t("err_open"))});
+  }
 
   /* ---------- controls ---------- */
   function makeRadios(box,name,items,checked,label,onchange){
@@ -698,87 +1118,121 @@ a.btn{text-decoration:none}
     });
   }
   function swatch(lab,c,n){var d=document.createElement("span");d.className="dot";d.style.background=c;lab.appendChild(d);lab.appendChild(document.createTextNode(n))}
-  makeRadios($("scenes"),"scene",SCENES,st.scene,function(s,l){l.textContent=s.name},function(i){st.scene=i;st.photo=false;st.calib={on:false,pts:[]};resetOffsets();renderAll()});
-  makeRadios($("walls"),"wall",WALLS,st.wall,function(w,l){swatch(l,w.c,w.n)},function(i){st.wall=i;renderStage()});
-  makeRadios($("fcolor"),"fcolor",FRAME_COLORS,0,function(c,l){swatch(l,c.c,c.n)},function(i){st.fc=i;renderStage()});
-  function setFrontNote(){$("frontNote").textContent=FRONTS.filter(function(f){return f.id===st.front})[0].note}
-  makeRadios($("front"),"front",FRONTS,0,function(f,l){l.textContent=f.n},function(i){st.front=FRONTS[i].id;setFrontNote();renderSummary();invalidate()});
-  setFrontNote();
-  var counts=[1,2,3,4,5,6,7,8,9,10];
-  makeRadios($("count"),"count",counts,-1,function(n,l){l.textContent=n},function(i){setCount(i+1)});
-  function buildLayouts(){
-    var idx=LAYOUTS.map(function(l){return l.id}).indexOf(st.layout);
-    makeRadios($("layouts"),"layout",LAYOUTS,idx,function(l,lab){lab.textContent=l.n},function(i){st.layout=LAYOUTS[i].id;resetOffsets();renderStage()});
-  }
-  buildLayouts();
-
-  PRESETS.forEach(function(p){
-    var b=document.createElement("button");b.type="button";b.className="btn ghost sm";b.textContent=p.n;
-    b.addEventListener("click",function(){
-      st.frames=[];st.nextArt=0;p.sizes.forEach(function(s){addFrame(s)});
-      st.layout=p.layout;buildLayouts();renderAll();
+  function idxOf(arr,id){for(var i=0;i<arr.length;i++){if(arr[i].id===id)return i}return -1}
+  function setFrontNote(){$("frontNote").textContent=t("note_"+st.front)}
+  function buildControls(){
+    makeRadios($("scenes"),"scene",SCENES,st.photo?-1:st.scene,function(s,l){l.textContent=t("scene_"+s.id)},function(i){st.scene=i;st.photo=false;st.calib={on:false,pts:[]};resetOffsets();renderAll()});
+    makeRadios($("walls"),"wall",WALLS,st.wall,function(w,l){swatch(l,w.c,t("wall_"+w.id))},function(i){st.wall=i;renderStage()});
+    makeRadios($("count"),"count",COUNTS,st.frames.length-1,function(n,l){l.textContent=n},function(i){setCount(i+1)});
+    var pre=$("presets");pre.innerHTML="";
+    PRESETS.forEach(function(p){
+      var b=document.createElement("button");b.type="button";b.className="btn ghost sm";b.textContent=t("preset_"+p.id);
+      b.addEventListener("click",function(){applyPreset(p)});
+      pre.appendChild(b);
     });
-    $("presets").appendChild(b);
-  });
-
-  /* shipping (Arabic) */
-  (function(){
-    var sel=$("gov"),o0=document.createElement("option");o0.value="";o0.textContent="اختر المحافظة";sel.appendChild(o0);
+    makeRadios($("layouts"),"layout",LAYOUTS,idxOf(LAYOUTS,st.layout),function(l,lab){lab.textContent=t("layout_"+l.id)},function(i){st.layout=LAYOUTS[i].id;resetOffsets();renderStage()});
+    makeRadios($("fcolor"),"fcolor",FRAME_COLORS,st.fc,function(c,l){swatch(l,c.c,t("fc_"+c.id))},function(i){st.fc=i;renderStage()});
+    makeRadios($("front"),"front",FRONTS,idxOf(FRONTS,st.front),function(f,l){l.textContent=t("front_"+f.id)},function(i){st.front=FRONTS[i].id;setFrontNote();renderSummary();invalidate()});
+    makeRadios($("pay"),"pay",PAYS,idxOf(PAYS,st.cust.pay),function(p,l){l.textContent=t("pay_"+p.id)},function(i){st.cust.pay=PAYS[i].id;updateChat()});
+    $("gapLabel").textContent=t("gapLabel",st.gap);
+    setFrontNote();
+  }
+  function buildGov(){
+    var sel=$("gov"),prev=st.govName;sel.innerHTML="";
+    var o0=document.createElement("option");o0.value="";o0.textContent=t("pick_gov");sel.appendChild(o0);
     ZONES.forEach(function(z){
-      var g=document.createElement("optgroup");g.label=z.n+" — "+z.fee+" جنيه";
-      z.gov.forEach(function(name){var o=document.createElement("option");o.value=z.fee;o.textContent=name+" — "+z.fee+" جنيه";o.dataset.name=name;g.appendChild(o)});
+      var g=document.createElement("optgroup");g.label=t("zone_"+z.id)+" — "+money(z.fee);
+      z.gov.forEach(function(nm){
+        var o=document.createElement("option");o.value=z.fee;o.textContent=(LANG==="ar"?nm[0]:nm[1])+" — "+money(z.fee);o.dataset.ar=nm[0];
+        if(nm[0]===prev)o.selected=true;g.appendChild(o);
+      });
       sel.appendChild(g);
     });
-    sel.addEventListener("change",function(){
-      st.fee=sel.value===""?null:parseInt(sel.value,10);
-      st.govName=sel.value===""?"":sel.options[sel.selectedIndex].dataset.name;
-      renderSummary();
-    });
-  })();
+  }
+  $("gov").addEventListener("change",function(){
+    var sel=$("gov");
+    st.fee=sel.value===""?null:parseInt(sel.value,10);
+    st.govName=sel.value===""?"":sel.options[sel.selectedIndex].dataset.ar;
+    renderSummary();
+  });
+  $("gap").addEventListener("input",function(e){st.gap=parseInt(e.target.value,10);$("gapLabel").textContent=t("gapLabel",st.gap);resetOffsets();renderStage()});
 
-  $("gap").addEventListener("input",function(e){st.gap=parseInt(e.target.value,10);$("gapv").textContent=st.gap;resetOffsets();renderStage()});
-
-  /* copy selection */
+  /* ---------- the order text ---------- */
   function invoiceLines(){
-    var P=pricing(),L=[];
-    L.push("My frame selection");
-    L.push("Room: "+(st.photo?"My own wall photo":scene().name)+" · Layout: "+LAYOUTS.filter(function(l){return l.id===st.layout})[0].n);
-    st.frames.forEach(function(f,i){var d=dimsOf(f);L.push((i+1)+") "+d.w+" × "+d.h+" cm"+(f.portrait?"":" (landscape)")+" — EGP "+SIZES[f.size].price+" · "+(f.file?"photo: "+fileNameFor(f,i):"no photo uploaded"))});
-    L.push("Frame colour: "+FRAME_COLORS[st.fc].n+" · Front: "+(st.front==="glass"?"Glass (shatter-resistant)":"Acrylic"));
-    if(P.glass)L.push("Glass front: "+P.n+" × EGP "+GLASS_FEE+" = EGP "+fmt(P.glass));
-    L.push("Subtotal: EGP "+fmt(P.sub));
-    if(P.disc)L.push("Discount: − EGP "+fmt(P.disc));
-    L.push("Delivery: "+(P.free?"Free":(P.pending?"(governorate not chosen)":P.ship+" EGP"))+(st.govName?" – "+st.govName:""));
-    L.push("Total: EGP "+fmt(P.total));
+    var P=pricing(),L=[],c=st.cust;
+    L.push(t("rc_title",P.n));
+    st.frames.forEach(function(f,i){var d=dimsOf(f);L.push((i+1)+") "+sizeText(d.w,d.h)+(f.portrait?"":" "+t("rc_land"))+" — "+money(SIZES[f.size].price)+(f.file?"":" · "+t("rc_nophoto")))});
+    L.push(t("rc_color")+": "+t("fc_"+FRAME_COLORS[st.fc].id)+" · "+t("rc_front")+": "+t("rc_f_"+st.front));
+    if(P.glass)L.push(t("rc_glass")+": "+P.n+" × "+money(GLASS_FEE)+" = "+money(P.glass));
+    L.push(t("rc_sub")+": "+money(P.sub));
+    if(P.disc)L.push(t("rc_disc")+": − "+money(P.disc));
+    L.push(t("rc_delivery")+": "+(P.free?t("free"):(P.pending?t("rc_gov_pending"):money(P.ship)))+(st.govName?" – "+st.govName:""));
+    L.push(t("rc_total")+": "+money(P.total));
+    L.push("");
+    L.push(t("rc_name")+": "+(c.name.trim()||"-"));
+    L.push(t("rc_area")+": "+(c.area.trim()||"-"));
+    L.push(t("rc_phone")+": "+(normPhone(c.phone)||c.phone.trim()||"-"));
+    L.push(t("rc_pay")+": "+t("pay_"+c.pay));
     return L;
   }
   function summaryText(){return invoiceLines().join("\n")}
   $("copy").addEventListener("click",function(){
-    var t=summaryText();
-    function fallback(){
-      var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+    var miss0=missingList();
+    if(miss0.length){say(t("missing_prefix",miss0.join(t("sep"))));return}
+    var tx=summaryText();
+    function fallbackCopy(){
+      var ta=document.createElement("textarea");ta.value=tx;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
       var ok=false;try{ok=document.execCommand("copy")}catch(e){}
       document.body.removeChild(ta);
-      say(ok?"Copied. Paste it in your message to us.":"Could not copy automatically. Please take a screenshot instead.");
+      say(ok?t("copied"):t("copy_fail"));
     }
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(t).then(function(){say("Copied. Paste it in your message to us.")},fallback);
-    }else fallback();
+      navigator.clipboard.writeText(tx).then(function(){say(t("copied"))},fallbackCopy);
+    }else fallbackCopy();
   });
 
-  /* ---------- send to WhatsApp (picture of the layout + invoice + original photos) ---------- */
-  var SEND_LABEL=WHATSAPP_NUMBER?"2. Send my pictures":"Send my design on WhatsApp",shareState=null;
-  function invalidate(){shareState=null;var b=$("send");if(b){b.textContent=SEND_LABEL}}
-  function fileNameFor(f,i){var d=dimsOf(f);return "frame"+(i+1)+"-"+d.w+"x"+d.h+"-"+f.file.name.replace(/[^\w.\-]+/g,"_")}
-  function buildFiles(){
-    var files=[];
-    st.frames.forEach(function(f,i){
-      if(f.file)files.push(new File([f.file],fileNameFor(f,i),{type:f.file.type||"image/jpeg"}));
-    });
-    return Promise.resolve(files);
+  /* ---------- send to WhatsApp (layout picture + the customer's photos) ---------- */
+  var shareState=null;
+  function invalidate(){shareState=null;var b=$("send");if(b){b.textContent=t("btn_send")}}
+  function fileExt(file){
+    var m=/\.([A-Za-z0-9]{2,5})$/.exec(file.name||""),e=m?m[1].toLowerCase():"";
+    if(!/^(jpg|jpeg|png|webp|heic|heif|gif)$/.test(e)){var t=(file.type||"").split("/")[1]||"";e=t==="jpeg"?"jpg":(t||"jpg")}
+    return e;
   }
+  function fileNameFor(f,i){var d=dimsOf(f);return "frame"+(i+1)+"-"+d.w+"x"+d.h+"."+fileExt(f.file)}
+  function loadImg(src){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("img"))};im.src=src})}
+  var FRAME_GRAD=[["#322f2c","#171615","#0c0b0b"],["#fbf9f4","#ebe7dd","#d3cec2"],["#c99c6a","#a77a4e","#8a6240"]];
+  function drawFrameOut(g,n,s){
+    var el=n.el,x=parseFloat(el.style.left)*s,y=parseFloat(el.style.top)*s,w=parseFloat(el.style.width)*s,h=parseFloat(el.style.height)*s,b=parseFloat(el.style.padding)*s;
+    g.save();g.shadowColor="rgba(0,0,0,.38)";g.shadowBlur=26*s;g.shadowOffsetX=5*s;g.shadowOffsetY=11*s;
+    var c=FRAME_GRAD[st.fc],gr=g.createLinearGradient(x,y,x+w,y+h);gr.addColorStop(0,c[0]);gr.addColorStop(.42,c[1]);gr.addColorStop(1,c[2]);
+    g.fillStyle=gr;g.fillRect(x,y,w,h);g.restore();
+    var ax=x+b,ay=y+b,aw=w-2*b,ah=h-2*b,f=n.f,d=dimsOf(f),a=d.w/d.h,cw0=Math.min(f.iw,f.ih*a),ch0=cw0/a,sc=f.sc||1;
+    g.drawImage(f.src,(f.iw-cw0)/2*sc,(f.ih-ch0)/2*sc,cw0*sc,ch0*sc,ax,ay,aw,ah);
+    g.strokeStyle="rgba(0,0,0,.4)";g.lineWidth=Math.max(1,s*1.2);g.strokeRect(ax,ay,aw,ah);
+  }
+  function buildPng(){
+    var stage=$("stage"),SW=stage.clientWidth,SH=stage.clientHeight,OW=1200,s=OW/SW,OH=Math.round(SH*s);
+    var c=document.createElement("canvas");c.width=OW;c.height=OH;
+    var g=c.getContext("2d");
+    var bgP=st.photo?loadImg(st.photoUrl):loadImg("data:image/svg+xml;charset=utf-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 250" preserveAspectRatio="none" width="'+OW+'" height="'+OH+'">'+sceneSVG(scene().id)+'</svg>'));
+    return bgP.then(function(bg){
+      if(!st.photo){g.fillStyle=WALLS[st.wall].c;g.fillRect(0,0,OW,OH)}
+      g.drawImage(bg,0,0,OW,OH);
+      nodes.forEach(function(n){drawFrameOut(g,n,s)});
+      return new Promise(function(res,rej){c.toBlob(function(b){b?res(b):rej(new Error("png"))},"image/png")});
+    });
+  }
+  function buildFiles(){
+    var photos=[];
+    st.frames.forEach(function(f,i){
+      if(f.file)photos.push(new File([f.file],fileNameFor(f,i),{type:f.file.type||"image/jpeg"}));
+    });
+    return buildPng().then(function(b){return [new File([b],"my-layout.png",{type:"image/png"})].concat(photos)},function(){return photos});
+  }
+
   function shareNow(files){
-    return navigator.share({files:files,text:summaryText(),title:"My frame selection"}).then(function(){say("Thank you! Your design was shared.")});
+    return navigator.share({files:files,text:summaryText(),title:t("rc_title",st.frames.length)}).then(function(){say(t("shared"))});
   }
   function fallback(files){
     files.forEach(function(f,i){
@@ -787,7 +1241,7 @@ a.btn{text-decoration:none}
         setTimeout(function(){URL.revokeObjectURL(u)},4000);
       },i*400);
     });
-    say("Your phone can’t send pictures directly from this page, so we saved them to your device. Please open WhatsApp and send us the saved pictures"+(WHATSAPP_NUMBER?" in our chat.":"."));
+    say(t("fallback"));
   }
   $("send").addEventListener("click",function(){
     var btn=$("send");
@@ -795,33 +1249,78 @@ a.btn{text-decoration:none}
       shareNow(shareState).catch(function(e){if(!e||e.name!=="AbortError")fallback(shareState)});
       return;
     }
-    btn.disabled=true;say("Preparing your photos…");
+    if(st.frames.some(function(f){return !f.file})){say(t("need_photos"));return}
+    btn.disabled=true;say(t("preparing"));
     buildFiles().then(function(files){
       btn.disabled=false;
-      if(!files.length){say("Please upload your own photo for each frame first: tap “Change photo” under the frame, then try again.");return}
       if(!(navigator.share&&navigator.canShare&&navigator.canShare({files:files}))){fallback(files);return}
       return shareNow(files).catch(function(e){
-        if(e&&e.name==="AbortError"){say("Cancelled.");return}
-        shareState=files;btn.textContent="Tap again to send";say("Almost done. Tap the button once more to choose WhatsApp.");
+        if(e&&e.name==="AbortError"){say(t("cancelled"));return}
+        shareState=files;btn.textContent=t("tap_again");say(t("tap_again_msg"));
       });
-    }).catch(function(){btn.disabled=false;say("Could not prepare the picture. Please take a screenshot instead.")});
+    }).catch(function(){btn.disabled=false;say(t("prep_fail"))});
   });
 
   /* ---------- WhatsApp chat link (works even if the customer has not saved our number) ---------- */
   function chatHref(){return "https://wa.me/"+WHATSAPP_NUMBER+"?text="+encodeURIComponent(summaryText())}
-  function updateChat(enabled){
+  /* the link always carries the latest text; while something is missing it has no address at all, so an incomplete order can't be sent by any route */
+  function updateChat(){
     var a=$("chat");
     if(!WHATSAPP_NUMBER){a.hidden=true;return}
-    a.hidden=false;a.href=chatHref();a.setAttribute("aria-disabled",enabled?"false":"true");
+    a.hidden=false;
+    if(missingList().length===0){a.href=chatHref();a.setAttribute("aria-disabled","false")}
+    else{a.removeAttribute("href");a.setAttribute("aria-disabled","true")}
   }
-  $("chat").addEventListener("click",function(){$("chat").href=chatHref()});
-  if(WHATSAPP_NUMBER)$("sendHint").textContent="Step 1 sends your selection to our chat. Step 2 sends the photos you uploaded: choose WhatsApp, then our chat (it shows in your recent chats after step 1). Your pictures stay on your phone until you choose to send them.";
+  $("chat").addEventListener("click",function(e){
+    var miss=missingList();
+    if(miss.length){e.preventDefault();say(t("missing_prefix",miss.join(t("sep"))));return}
+    $("chat").href=chatHref();
+  });
+  function bindCust(id,key){$(id).addEventListener("input",function(e){st.cust[key]=e.target.value;updateBar(pricing());updateChat()})}
+  bindCust("cName","name");bindCust("cArea","area");bindCust("cPhone","phone");
+
+  /* ---------- bottom bar (phones) ---------- */
+  function showStep(n,scroll){
+    st.step=n;
+    $("designPane").hidden=(n!==1);$("orderPane").hidden=(n!==2);
+    [].forEach.call(document.querySelectorAll(".stepbtn"),function(b){
+      if(parseInt(b.getAttribute("data-step"),10)===n)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current");
+    });
+    $("bar").classList.toggle("off",n===2);
+    $("stagePanel").classList.toggle("order",n===2);
+    if(scroll){try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}}
+  }
+  [].forEach.call(document.querySelectorAll(".stepbtn"),function(b){b.addEventListener("click",function(){showStep(parseInt(b.getAttribute("data-step"),10),true)})});
+  $("nextBtn").addEventListener("click",function(){showStep(2,true)});
+  $("barBtn").addEventListener("click",function(){showStep(2,true)});
+  $("backBtn").addEventListener("click",function(){showStep(1,true)});
+
+  /* ---------- language ---------- */
+  function applyLang(){
+    var de=document.documentElement;de.lang=LANG;de.dir=(LANG==="ar"?"rtl":"ltr");
+    document.title=t("docTitle");
+    [].forEach.call(document.querySelectorAll("[data-i18n]"),function(el){el.textContent=t(el.getAttribute("data-i18n"))});
+    [].forEach.call(document.querySelectorAll(".langbtn"),function(b){b.setAttribute("aria-pressed",b.getAttribute("data-lang")===LANG?"true":"false")});
+    var groups={scenes:"room",walls:"wallColour",count:"howMany",layouts:"arrangement",fcolor:"frameColour",front:"front",pay:"custPay"};
+    Object.keys(groups).forEach(function(id){$(id).setAttribute("aria-label",t(groups[id]))});
+    $("gap").setAttribute("aria-label",t("gapLabel",st.gap));
+    $("bar").setAttribute("aria-label",t("total"));
+    buildControls();buildGov();renderAll();
+  }
+  [].forEach.call(document.querySelectorAll(".langbtn"),function(b){
+    b.addEventListener("click",function(){
+      LANG=b.getAttribute("data-lang");
+      try{localStorage.setItem("lang",LANG)}catch(e){}
+      applyLang();
+    });
+  });
 
   var raf=0;
   window.addEventListener("resize",function(){cancelAnimationFrame(raf);raf=requestAnimationFrame(renderStage)});
 
   [1,1,1].forEach(function(s){addFrame(s)});
-  renderAll();
+  applyLang();
+  showStep(1,false);
 })();
 </script>
 </body>
