@@ -196,6 +196,8 @@ html[lang="ar"] h1,html[lang="ar"] h2,html[lang="ar"] .total{font-weight:700}
 html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
 .lbclose:focus-visible,.lbnav:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){.lbnav{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;width:44px;height:44px}}
+.lbbuy{position:absolute;bottom:max(16px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:3;box-shadow:0 4px 16px rgba(0,0,0,.45);white-space:nowrap}
+@media (max-width:700px){.lbbuy{padding:0 14px}}
 </style>
 </head>
 <body>
@@ -360,6 +362,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   <button type="button" class="lbclose" id="lbClose">✕</button>
   <button type="button" class="lbnav lbprev" id="lbPrev"><span>‹</span></button>
   <div class="lbbody" id="lbBody"></div>
+  <button type="button" class="btn lbbuy" id="lbOrder"></button>
   <button type="button" class="lbnav lbnext" id="lbNext"><span>›</span></button>
 </div>
 
@@ -495,6 +498,9 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     cal_err_len:"Type a length in centimetres, for example 200.",
     cal_err_close:"The two points are too close. Cancel and tap them again, further apart.",
     tapHint:"Tap an empty frame on the wall to add your photo.",tapTitle:"Tap to add your photo",
+    orderDesign:"Order this design",designAdded:function(n){return "Design added as frame "+n+". Choose its size below."},designMaxed:"You already have the maximum number of frames.",
+    q_design:"Ready design",designSub:function(c){return "Ready design · "+c},b_uploadInstead:"Use my own photo",a_uploadInstead:function(i){return "Use my own photo for frame "+i},
+    rc_design:function(c){return "ready design: "+c},
     step3:"Our work",galTitle:"Our work",galIntro:"Real frames we made. Tap any picture to see it bigger.",
     galAll:"All",galMore:function(n){return "Show more ("+n+")"},galEmpty:"No work added yet.",galError:"Could not load the gallery. Please try again.",
     galClose:"Close",galPrev:"Previous",galNext:"Next",galCta:"Design your own wall",galOf:function(i,n){return "Item "+i+" of "+n},galPlay:"Play video",
@@ -598,6 +604,9 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     cal_err_len:"اكتب الطول بالسنتيمتر، مثلاً 200.",
     cal_err_close:"النقطتين قريبين أوي. الغي وحدّدهم تاني بعيد عن بعض.",
     tapHint:"اضغط على أي برواز فاضي على الحيطة عشان تضيف صورتك.",tapTitle:"اضغط لإضافة صورتك",
+    orderDesign:"اطلب التصميم ده",designAdded:function(n){return "اتضاف التصميم كبرواز "+n+". اختار مقاسه من تحت."},designMaxed:"وصلت للحد الأقصى من البراويز.",
+    q_design:"تصميم جاهز",designSub:function(c){return "تصميم جاهز · "+c},b_uploadInstead:"استخدم صورتي",a_uploadInstead:function(i){return "استخدم صورتي للبرواز "+i},
+    rc_design:function(c){return "تصميم جاهز: "+c},
     step3:"من شغلنا",galTitle:"من شغلنا",galIntro:"شغل حقيقي من عندنا. اضغط على أي صورة تكبّرها.",
     galAll:"الكل",galMore:function(n){return "اعرض المزيد ("+n+")"},galEmpty:"لسه مفيش شغل متضاف.",galError:"ماقدرناش نحمّل المعرض. حاول تاني.",
     galClose:"إغلاق",galPrev:"السابق",galNext:"التالي",galCta:"صمّم حيطتك",galOf:function(i,n){return "العنصر "+i+" من "+n},galPlay:"شغّل الفيديو",
@@ -749,8 +758,8 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   }
 
   /* uploaded photos are never thrown away when the customer changes the number of frames or the set */
-  function stash(f){if(f.file)st.spare.push({src:f.src,iw:f.iw,ih:f.ih,sc:f.sc,name:f.name,file:f.file})}
-  function restoreInto(f){var s=st.spare.pop();if(!s)return false;f.src=s.src;f.iw=s.iw;f.ih=s.ih;f.sc=s.sc;f.name=s.name;f.file=s.file;return true}
+  function stash(f){if(f.file||f.design)st.spare.push({src:f.src,iw:f.iw,ih:f.ih,sc:f.sc,name:f.name,file:f.file,design:f.design})}
+  function restoreInto(f){var s=st.spare.pop();if(!s)return false;f.src=s.src;f.iw=s.iw;f.ih=s.ih;f.sc=s.sc;f.name=s.name;f.file=s.file;f.design=s.design||null;return true}
   function addFrameSmart(size){if(!addFrame(size))return false;restoreInto(st.frames[st.frames.length-1]);return true}
   function setCount(n){
     while(st.frames.length>n)stash(st.frames.pop());
@@ -901,9 +910,9 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     else{var sc0=scene();top=sc0.center?sc0.center-L.h/2:(sc0.top-GAP_ABOVE)-L.h}
     L.pos.forEach(function(p){
       var f=p.it.f,d=dimsOf(f),idx=st.frames.indexOf(f)+1;
-      var el=document.createElement("div");el.className="frame "+FRAME_COLORS[st.fc].cls+(f.file?"":" nophoto");el.tabIndex=0;el.setAttribute("role","img");
-      el.setAttribute("aria-label",t("a_frame",idx,d.w,d.h)+(f.file?"":" "+t("tapTitle")));
-      if(!f.file)el.title=t("tapTitle");
+      var el=document.createElement("div");el.className="frame "+FRAME_COLORS[st.fc].cls+(hasArt(f)?"":" nophoto");el.tabIndex=0;el.setAttribute("role","img");
+      el.setAttribute("aria-label",t("a_frame",idx,d.w,d.h)+(hasArt(f)?"":" "+t("tapTitle")));
+      if(!hasArt(f))el.title=t("tapTitle");
       el.style.width=(p.it.w*k)+"px";el.style.height=(p.it.h*k)+"px";el.style.padding=(FB*k)+"px";
       var wrap=document.createElement("div");wrap.className="artwrap";
       var cv=document.createElement("canvas");
@@ -911,7 +920,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
       cv.width=Math.max(10,Math.min(Math.round(d.w*k*DPR),520));
       cv.height=Math.max(10,Math.round(cv.width*d.h/d.w));
       wrap.appendChild(cv);
-      if(!f.file){
+      if(!hasArt(f)){
         var bd=document.createElement("div"),bs=Math.max(18,Math.min(38,d.w*k*0.45));
         bd.className="addbadge";bd.style.width=bs+"px";bd.style.height=bs+"px";bd.style.fontSize=(bs*0.75)+"px";bd.textContent="+";wrap.appendChild(bd);
       }
@@ -955,10 +964,10 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     el.addEventListener("click",function(){
       if(movedPx){movedPx=false;return}
       if(st.calib.on)return;
-      if(!n.f.file)pickPhoto(n.f);
+      if(!hasArt(n.f))pickPhoto(n.f);
     });
     el.addEventListener("keydown",function(e){
-      if((e.key==="Enter"||e.key===" ")&&!n.f.file){e.preventDefault();pickPhoto(n.f);return}
+      if((e.key==="Enter"||e.key===" ")&&!hasArt(n.f)){e.preventDefault();pickPhoto(n.f);return}
       var v={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];
       if(!v)return;e.preventDefault();var s=e.shiftKey?5:1;
       n.f.dx+=v[0]*s;n.f.dy+=v[1]*s;place(n,kk());invalidate();
@@ -1061,10 +1070,10 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
       var tsc=f.sc||1;tg.drawImage(f.src,(f.iw-cw0)/2*tsc,(f.ih-ch0)/2*tsc,cw0*tsc,ch0*tsc,0,0,th.width,th.height);
       var tt=document.createElement("div");tt.className="ititle";
       var b=document.createElement("b");b.textContent=t("frameTitle",i+1,d.w,d.h);
-      var sp=document.createElement("span");sp.textContent=money(SIZES[f.size].price)+" · "+(f.file?t("yourPhoto"):t("samplePic"));
+      var sp=document.createElement("span");sp.textContent=money(SIZES[f.size].price)+" · "+(f.design?t("designSub",codeOf(f.design.file)):(f.file?t("yourPhoto"):t("samplePic")));
       tt.appendChild(b);tt.appendChild(sp);
       var tag=document.createElement("span");
-      if(f.file){tag.className="tag "+q.cls;tag.textContent=t(q.k);tag.title=t("dpiTip",fmt(q.dpi))}else{tag.className="tag ok";tag.textContent=t("q_add")}
+      if(f.design){tag.className="tag good";tag.textContent=t("q_design")}else if(f.file){tag.className="tag "+q.cls;tag.textContent=t(q.k);tag.title=t("dpiTip",fmt(q.dpi))}else{tag.className="tag ok";tag.textContent=t("q_add")}
       var hd=document.createElement("button");hd.type="button";hd.className="handle";hd.dataset.id=f.id;hd.dataset.role="handle";
       hd.setAttribute("aria-label",t("a_reorder",i+1));hd.title=t("a_dragTitle");
       hd.innerHTML='<svg width="14" height="22" viewBox="0 0 14 22" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.8"/><circle cx="10" cy="4" r="1.8"/><circle cx="4" cy="11" r="1.8"/><circle cx="10" cy="11" r="1.8"/><circle cx="4" cy="18" r="1.8"/><circle cx="10" cy="18" r="1.8"/></svg>';
@@ -1076,8 +1085,8 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
       sel.addEventListener("change",function(){f.size=parseInt(sel.value,10);resetOffsets();renderAll()});
       function btn(label,role,fn,aria){var bt=document.createElement("button");bt.type="button";bt.className="btn ghost sm";bt.textContent=label;bt.dataset.id=f.id;bt.dataset.role=role;bt.setAttribute("aria-label",aria);bt.addEventListener("click",fn);return bt}
       var rot=btn(f.portrait?t("b_landscape"):t("b_portrait"),"rot",function(){f.portrait=!f.portrait;resetOffsets();renderAll()},t("a_rotate",i+1));
-      var ph=btn(f.file?t("b_change"):t("b_upload"),"photo",function(){pickPhoto(f)},f.file?t("a_change",i+1):t("a_upload",i+1));
-      if(!f.file)ph.className="btn sm";
+      var ph=btn(f.design?t("b_uploadInstead"):(f.file?t("b_change"):t("b_upload")),"photo",function(){pickPhoto(f)},f.design?t("a_uploadInstead",i+1):(f.file?t("a_change",i+1):t("a_upload",i+1)));
+      if(!hasArt(f))ph.className="btn sm";
       var rm=btn(t("b_remove"),"rm",function(){st.frames=st.frames.filter(function(x){return x!==f});resetOffsets();renderAll()},t("a_remove",i+1));
       var up=btn("↑","up",function(){moveFrame(i,-1)},t("a_up",i+1)),dn=btn("↓","down",function(){moveFrame(i,1)},t("a_down",i+1));
       up.disabled=(i===0);dn.disabled=(i===st.frames.length-1);
@@ -1108,7 +1117,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   function missingList(){
     var m=[],c=st.cust,sep=t("sep");
     if(!st.frames.length)return [t("miss_count")];
-    var np=[];st.frames.forEach(function(f,i){if(!f.file)np.push(i+1)});
+    var np=[];st.frames.forEach(function(f,i){if(!hasArt(f))np.push(i+1)});
     if(np.length)m.push(t("miss_photos",np.length,np.join(sep)));
     if(!c.name.trim())m.push(t("miss_name"));
     if(!c.area.trim())m.push(t("miss_area"));
@@ -1122,7 +1131,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     bm.textContent=miss.length?t("bar_missing",miss.join(t("sep"))):t("bar_ready");
     bm.className="barmsg"+(miss.length?"":" ok");
     var mb=$("missBox");mb.textContent=miss.length?t("bar_missing",miss.join(t("sep"))):t("miss_ready");mb.className="miss"+(miss.length?"":" ok");
-    $("tapHint").hidden=!st.frames.some(function(f){return !f.file});
+    $("tapHint").hidden=!st.frames.some(function(f){return !hasArt(f)});
   }
   function renderSummary(){
     var counts={};
@@ -1174,7 +1183,9 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   function readImage(file){
     return new Promise(function(res,rej){var url=URL.createObjectURL(file),im=new Image();im.onload=function(){res(im)};im.onerror=function(){rej(new Error("img"))};im.src=url});
   }
-  function putPhoto(f,im,file){f.src=im;f.iw=im.naturalWidth;f.ih=im.naturalHeight;f.sc=1;f.name=file.name;f.file=file}
+  function putPhoto(f,im,file){f.src=im;f.iw=im.naturalWidth;f.ih=im.naturalHeight;f.sc=1;f.name=file.name;f.file=file;f.design=null}
+  function hasArt(f){return !!(f.file||f.design)}
+  function codeOf(file){return String(file).replace(/\.[^.]+$/,"")}
   fileInput.addEventListener("change",function(){
     var file=fileInput.files[0],f=pending;fileInput.value="";
     if(!file||!f)return;
@@ -1186,7 +1197,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   function addPhotos(files){
     files=files.filter(function(f){return /^image\//.test(f.type)});
     if(!files.length){say(t("err_image"));return}
-    var targets=[];st.frames.forEach(function(f){if(!f.file)targets.push(f)});
+    var targets=[];st.frames.forEach(function(f){if(!hasArt(f))targets.push(f)});
     var extra=files.length-targets.length,ignored=0;
     if(extra>0){
       var last=st.frames.length?st.frames[st.frames.length-1].size:1;
@@ -1256,7 +1267,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   function invoiceLines(){
     var P=pricing(),L=[],c=st.cust;
     L.push(t("rc_title",P.n));
-    st.frames.forEach(function(f,i){var d=dimsOf(f);L.push((i+1)+") "+sizeText(d.w,d.h)+(f.portrait?"":" "+t("rc_land"))+" — "+money(SIZES[f.size].price)+(f.file?"":" · "+t("rc_nophoto")))});
+    st.frames.forEach(function(f,i){var d=dimsOf(f);L.push((i+1)+") "+sizeText(d.w,d.h)+(f.portrait?"":" "+t("rc_land"))+" — "+money(SIZES[f.size].price)+(f.design?" · "+t("rc_design",codeOf(f.design.file)):(f.file?"":" · "+t("rc_nophoto"))))});
     L.push(t("rc_color")+": "+t("fc_"+FRAME_COLORS[st.fc].id)+" · "+t("rc_front")+": "+t("rc_f_"+st.front));
     if(P.glass)L.push(t("rc_glass")+": "+P.n+" × "+money(GLASS_FEE)+" = "+money(P.glass));
     if(P.hooks)L.push(t("rc_hooks")+": "+P.hooks+" = "+money(P.hookCost));
@@ -1345,7 +1356,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
       shareNow(shareState).catch(function(e){if(!e||e.name!=="AbortError")fallback(shareState)});
       return;
     }
-    if(st.frames.some(function(f){return !f.file})){say(t("need_photos"));return}
+    if(st.frames.some(function(f){return !hasArt(f)})){say(t("need_photos"));return}
     btn.disabled=true;say(t("preparing"));
     buildFiles().then(function(files){
       btn.disabled=false;
@@ -1442,7 +1453,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
   $("galMore").addEventListener("click",function(){gal.limit+=GAL_PAGE;renderGrid(true)});
   function setLbLabels(){
     $("lbClose").setAttribute("aria-label",t("galClose"));$("lbPrev").setAttribute("aria-label",t("galPrev"));$("lbNext").setAttribute("aria-label",t("galNext"));
-    $("lb").setAttribute("aria-label",t("galTitle"));
+    $("lb").setAttribute("aria-label",t("galTitle"));$("lbOrder").textContent=t("orderDesign");
   }
   function showLb(){
     var it=gal.list[gal.idx],body=$("lbBody"),old=body.querySelector("video");
@@ -1456,6 +1467,7 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
       var im=document.createElement("img");im.alt="";im.src=mediaUrl(MEDIA_BASE+it.file);body.appendChild(im);
     }
     $("lbPrev").hidden=$("lbNext").hidden=gal.list.length<2;
+    $("lbOrder").hidden=isVideo(it);
   }
   function openLb(i,opener){
     gal.idx=i;gal.opener=opener||null;setLbLabels();
@@ -1474,6 +1486,26 @@ html[dir="rtl"] .lbnav span{display:inline-block;transform:scaleX(-1)}
     else if(e.key==="ArrowRight"){stepLb(LANG==="ar"?-1:1)}
     else if(e.key==="ArrowLeft"){stepLb(LANG==="ar"?1:-1)}
   }
+  function addDesign(it){
+    var f=null;
+    for(var i=0;i<st.frames.length;i++){if(!hasArt(st.frames[i])){f=st.frames[i];break}}
+    if(!f){
+      if(st.frames.length>=MAX){say(t("designMaxed"));return}
+      var last=st.frames.length?st.frames[st.frames.length-1].size:1;
+      addFrame(last);f=st.frames[st.frames.length-1];
+    }
+    var url=mediaUrl(MEDIA_BASE+it.file),im=new Image();
+    im.onload=function(){
+      f.src=im;f.iw=im.naturalWidth;f.ih=im.naturalHeight;f.sc=1;f.name=it.file;f.file=null;f.design={file:it.file,cat:it.cat};
+      resetOffsets();closeLb();showStep(1,false);renderAll();
+      say(t("designAdded",st.frames.indexOf(f)+1));
+      var sel=document.querySelector('#list [data-id="'+f.id+'"][data-role="size"]');
+      if(sel){if(sel.scrollIntoView)sel.scrollIntoView({block:"center",behavior:"smooth"});sel.focus()}
+    };
+    im.onerror=function(){closeLb();say(t("err_open"))};
+    im.src=url;
+  }
+  $("lbOrder").addEventListener("click",function(){var it=gal.list[gal.idx];if(it&&!isVideo(it))addDesign(it)});
   $("lbClose").addEventListener("click",closeLb);
   $("lbPrev").addEventListener("click",function(){stepLb(-1)});
   $("lbNext").addEventListener("click",function(){stepLb(1)});
